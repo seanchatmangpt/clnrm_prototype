@@ -6,8 +6,9 @@
 use clnrm::CleanroomConfig;
 use clnrm::CleanroomEnvironment;
 use clnrm::Result;
-use clnrm::backend::extensions::*;
-use clnrm::backend::capabilities::*;
+// Backend extensions are not available in the current API
+// use clnrm::backend::extensions::*;
+// use clnrm::backend::capabilities::*;
 use std::collections::HashMap;
 use std::time::Duration;
 

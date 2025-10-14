@@ -1,6 +1,6 @@
 [package]
 name = "clnrm"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Cleanroom Contributors"]
 description = "Deterministic, hermetic execution environment for testing and validation"
@@ -41,6 +41,7 @@ default = []
 coverage = []
 signing = []
 services = []
+advanced_benchmarks = []
 
 [[bin]]
 name = "bench"

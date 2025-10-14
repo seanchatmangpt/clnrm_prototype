@@ -3,11 +3,9 @@
 //! This benchmark measures the performance of creating CleanroomConfig
 //! instances with various configurations and the new builder pattern.
 
-use crate::cleanroom::builder::CleanroomBuilder;
-use crate::cleanroom::config::CleanroomConfig;
-use crate::cleanroom::limits::ResourceLimits;
-use crate::cleanroom::policy::SecurityPolicy;
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use clnrm::{CleanroomBuilder, CleanroomConfig, ResourceLimits, SecurityPolicy};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use std::hint::black_box;
 use std::time::Duration;
 
 fn bench_config_creation_default(c: &mut Criterion) {

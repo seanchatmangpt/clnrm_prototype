@@ -15,7 +15,7 @@
 
 use std::num::NonZeroU64;
 use std::fmt;
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -26,10 +26,11 @@ pub struct Id<T>(NonZeroU64, std::marker::PhantomData<T>);
 impl<T> Id<T> {
     /// Create a new ID with a random value
     pub fn new() -> Self {
-        Self(
-            NonZeroU64::new(fastrand::u64(1..)).unwrap(),
-            std::marker::PhantomData,
-        )
+        // Safety: fastrand::u64(1..) guarantees a value >= 1, making this safe
+        let value = fastrand::u64(1..);
+        // SAFETY: fastrand::u64(1..) never returns 0, so this is always safe
+        let non_zero = unsafe { NonZeroU64::new_unchecked(value) };
+        Self(non_zero, std::marker::PhantomData)
     }
 
     /// Create an ID from a specific value
@@ -144,7 +145,7 @@ impl SessionId {
             bytes[0], bytes[1], bytes[2], bytes[3],
             bytes[4], bytes[5], bytes[6], bytes[7],
         ]);
-        Self(Id::from_value(value).unwrap_or_else(|| Id::new()))
+        Self(Id::from_value(value).unwrap_or_else(Id::new))
     }
 
     /// Create a session ID from a value
@@ -489,22 +490,28 @@ impl IdRegistry {
 }
 
 /// Convenience functions for creating IDs
+///
+/// Create a new container ID
 pub fn container_id() -> ContainerId {
     ContainerId::new()
 }
 
+/// Create a new session ID
 pub fn session_id() -> SessionId {
     SessionId::new()
 }
 
+/// Create a new task ID
 pub fn task_id() -> TaskId {
     TaskId::new()
 }
 
+/// Create a new test ID
 pub fn test_id() -> TestId {
     TestId::new()
 }
 
+/// Create a new scenario ID
 pub fn scenario_id() -> ScenarioId {
     ScenarioId::new()
 }

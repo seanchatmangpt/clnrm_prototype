@@ -329,7 +329,7 @@ impl TestReport {
     }
 
     /// Record test execution
-    pub fn record_test_execution(&self, test_name: String, success: bool, execution_time: Duration) {
+    pub fn record_test_execution(&self, _test_name: String, success: bool, execution_time: Duration) {
         // This is a synchronous method that updates the test summary
         // In a real implementation, this would need to be async or use a different approach
         // For now, we'll just update the summary directly

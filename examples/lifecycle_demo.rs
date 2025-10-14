@@ -18,7 +18,7 @@ async fn main() -> anyhow::Result<()> {
     let config = CleanroomConfig::default();
     println!("   ✓ Created cleanroom config");
     println!("   ✓ Test timeout: {:?}", config.test_execution_timeout);
-    println!("   ✓ Security level: {:?}\n", config.policy.security.security_level);
+    println!("   ✓ Security level: {:?}\n", config.security_policy.security_level);
 
     // 2. Create cleanroom environment
     println!("🏗️  Step 2: Create Cleanroom Environment");

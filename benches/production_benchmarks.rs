@@ -25,9 +25,10 @@
 //! cargo bench --bench production_benchmarks
 //! ```
 
-use clnrm::cleanroom::{CleanroomConfig, CleanroomEnvironment};
-use clnrm::error::{CleanroomError, Result};
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use clnrm::{CleanroomConfig, CleanroomEnvironment};
+use clnrm::error::CleanroomError;
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use std::hint::black_box;
 use std::sync::Arc;
 use std::time::Duration;
 

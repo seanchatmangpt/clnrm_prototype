@@ -11,48 +11,13 @@
 use crate::error::{CleanroomError, Result};
 use crate::serializable_instant::SerializableInstant;
 use serde::{Deserialize, Serialize};
-use serde::{Deserializer, Serializer};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-/// Serializable wrapper for SerializableInstant
-#[derive(Debug, Clone)]
-pub struct SerializableSerializableInstant(pub SerializableInstant);
-
-impl serde::Serialize for SerializableSerializableInstant {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let elapsed = self.0.elapsed();
-        serializer.serialize_u64(elapsed.as_secs() * 1_000_000_000 + elapsed.subsec_nanos() as u64)
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for SerializableSerializableInstant {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let nanos = u64::deserialize(deserializer)?;
-        let secs = nanos / 1_000_000_000;
-        let subsec_nanos = (nanos % 1_000_000_000) as u32;
-        let duration = Duration::new(secs, subsec_nanos);
-        Ok(SerializableSerializableInstant(
-            SerializableInstant::now() - duration,
-        ))
-    }
-}
-
-impl SerializableSerializableInstant {
-    /// Create a new SerializableSerializableInstant with current time
-    pub fn now() -> Self {
-        Self(SerializableInstant::now())
-    }
-}
+// Use SerializableInstant directly
 
 /// Tracing manager for cleanroom testing
 #[derive(Debug, Clone)]
@@ -188,14 +153,13 @@ pub struct SpanEvent {
     /// Event name
     pub name: String,
     /// Event timestamp
-    pub timestamp: SerializableSerializableInstant,
+    pub timestamp: SerializableInstant,
     /// Event data
     pub data: HashMap<String, String>,
 }
 
 /// Metric structure
-#[derive(Debug, Clone)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metric {
     /// Metric name
     pub name: String,
@@ -204,7 +168,7 @@ pub struct Metric {
     /// Metric type
     pub metric_type: MetricType,
     /// Timestamp
-    pub timestamp: SerializableSerializableInstant,
+    pub timestamp: SerializableInstant,
     /// Tags
     pub tags: HashMap<String, String>,
     /// Unit
@@ -215,7 +179,7 @@ impl Metric {
     /// Create a new metric
     pub fn new(
         name: String, value: f64, metric_type: MetricType,
-        timestamp: SerializableSerializableInstant,
+        timestamp: SerializableInstant,
     ) -> Self {
         Self {
             name,
@@ -249,7 +213,7 @@ pub struct LogEntry {
     /// Log message
     pub message: String,
     /// Timestamp
-    pub timestamp: SerializableSerializableInstant,
+    pub timestamp: SerializableInstant,
     /// Source
     pub source: Option<String>,
     /// Tags
@@ -268,7 +232,7 @@ pub type Log = LogEntry;
 impl LogEntry {
     /// Create a new log entry
     pub fn new(
-        level: LogLevel, message: String, timestamp: SerializableSerializableInstant,
+        level: LogLevel, message: String, timestamp: SerializableInstant,
     ) -> Self {
         Self {
             level,
@@ -400,7 +364,7 @@ impl TracingManager {
         if let Some(span) = tracing_data.spans.get_mut(span_name) {
             let event = SpanEvent {
                 name: event_name,
-                timestamp: SerializableSerializableInstant(SerializableInstant::now()),
+                timestamp: SerializableInstant::now(),
                 data,
             };
             span.events.push(event);
@@ -436,7 +400,7 @@ impl TracingManager {
             name: name.clone(),
             value,
             metric_type,
-            timestamp: SerializableSerializableInstant(SerializableInstant::now()),
+            timestamp: SerializableInstant::now(),
             tags,
             unit,
         };
@@ -460,7 +424,7 @@ impl TracingManager {
         let log_entry = LogEntry {
             level,
             message,
-            timestamp: SerializableSerializableInstant(SerializableInstant::now()),
+            timestamp: SerializableInstant::now(),
             source,
             tags,
             metadata,
@@ -786,7 +750,7 @@ pub struct MetricSummary {
     /// Metric type
     pub metric_type: MetricType,
     /// Timestamp
-    pub timestamp: SerializableSerializableInstant,
+    pub timestamp: SerializableInstant,
     /// Unit
     pub unit: Option<String>,
     /// Tags count
@@ -1494,7 +1458,7 @@ mod tests {
         let log = Log::new(
             LogLevel::Info,
             "test message".to_string(),
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         assert_eq!(log.level, LogLevel::Info);
@@ -1515,7 +1479,7 @@ mod tests {
         let log = Log::new(
             LogLevel::Warn,
             "test message".to_string(),
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         let json = serde_json::to_string(&log).unwrap_or_else(|_| panic!("Operation failed"));
@@ -1549,7 +1513,7 @@ mod tests {
         let log = Log::new(
             LogLevel::Error,
             "error message".to_string(),
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         let debug_str = format!("{:?}", log);
@@ -1566,7 +1530,7 @@ mod tests {
         let log1 = Log::new(
             LogLevel::Info,
             "test message".to_string(),
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         let log2 = log1.clone();
@@ -1584,7 +1548,7 @@ mod tests {
             "test_metric".to_string(),
             42.0,
             MetricType::Counter,
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         assert_eq!(metric.name, "test_metric");
@@ -1603,7 +1567,7 @@ mod tests {
             "test_metric".to_string(),
             42.0,
             MetricType::Gauge,
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         let json = serde_json::to_string(&metric).unwrap_or_else(|_| panic!("Operation failed"));
@@ -1638,7 +1602,7 @@ mod tests {
             "test_metric".to_string(),
             42.0,
             MetricType::Counter,
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         let debug_str = format!("{:?}", metric);
@@ -1656,7 +1620,7 @@ mod tests {
             "test_metric".to_string(),
             42.0,
             MetricType::Counter,
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         let metric2 = metric1.clone();
@@ -1705,7 +1669,7 @@ mod tests {
         let log = Log::new(
             LogLevel::Info,
             "test message".to_string(),
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         data.add_log(log);
@@ -1722,7 +1686,7 @@ mod tests {
             "test_metric".to_string(),
             42.0,
             MetricType::Counter,
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         data.add_metric(metric);
@@ -1767,14 +1731,14 @@ mod tests {
         let log = Log::new(
             LogLevel::Info,
             "test message".to_string(),
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         let metric = Metric::new(
             "test_metric".to_string(),
             42.0,
             MetricType::Counter,
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         data.add_span(span);
@@ -1849,14 +1813,14 @@ mod tests {
         let log = Log::new(
             LogLevel::Info,
             "test message".to_string(),
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         let metric = Metric::new(
             "test_metric".to_string(),
             42.0,
             MetricType::Counter,
-            SerializableSerializableInstant::now(),
+            SerializableInstant::now(),
         );
 
         report.spans.push(SpanSummary {

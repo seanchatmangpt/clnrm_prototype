@@ -90,6 +90,7 @@ use crate::config::CleanroomConfig;
 use crate::policy::SecurityPolicy;
 use crate::limits::ResourceLimits;
 use crate::cleanroom::CleanroomEnvironment;
+use crate::SecurityLevel;
 use std::time::Duration;
 
 /// Type-safe builder for CleanroomEnvironment using the typestate pattern
@@ -371,7 +372,7 @@ impl Default for CleanroomBuilder<Initial> {
 impl CleanroomBuilder<Initial> {
     /// Create a secure environment with locked-down policies
     pub fn secure() -> CleanroomBuilder<WithSecurity> {
-        Self::new().with_security_policy(SecurityPolicy::with_security_level(crate::policy::SecurityLevel::Locked))
+        Self::new().with_security_policy(SecurityPolicy::with_security_level(SecurityLevel::Locked))
     }
 
     /// Create a high-performance environment with optimized settings
@@ -424,7 +425,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_builder_with_security() {
-        let policy = SecurityPolicy::with_security_level(crate::policy::SecurityLevel::Locked);
+        let policy = SecurityPolicy::with_security_level(crate::SecurityLevel::Locked);
         let env = CleanroomBuilder::new()
             .with_security_policy(policy.clone())
             .build()

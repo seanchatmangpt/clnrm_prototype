@@ -318,7 +318,7 @@ pub struct CleanroomEnvironment {
     backend: TestcontainerBackend,
     /// Service manager for database and cache services
     #[cfg(feature = "services")]
-    services: ServiceManager,
+    services: Arc<ServiceManager>,
     /// Structured concurrency orchestrator
     orchestrator: Arc<RwLock<ConcurrencyOrchestrator>>,
     /// Start time of the cleanroom environment
@@ -532,7 +532,7 @@ impl CleanroomEnvironment {
         let start_time = Instant::now();
         let backend = TestcontainerBackend::new("alpine:latest")?;
         #[cfg(feature = "services")]
-        let services = ServiceManager::new();
+        let services = Arc::new(ServiceManager::new());
 
         let metrics = CleanroomMetrics {
             session_id,
@@ -603,7 +603,7 @@ impl CleanroomEnvironment {
     /// Get services
     #[cfg(feature = "services")]
     pub fn services(&self) -> &ServiceManager {
-        &self.services
+        &*self.services
     }
 
     /// Execute a test function
@@ -699,7 +699,11 @@ impl CleanroomEnvironment {
     pub async fn cleanup(&mut self) -> Result<()> {
         // Stop all services
         #[cfg(feature = "services")]
-        self.services.stop_all()?;
+        {
+            Arc::get_mut(&mut self.services)
+                .ok_or_else(|| CleanroomError::internal_error("Cannot get mutable reference to services"))?
+                .stop_all()?;
+        }
 
         // Clear container registry
         {

@@ -246,8 +246,8 @@ fn demo_determinism() -> Result<()> {
     println!("\n=== Determinism Demo ===");
 
     // Create two separate managers with the same seed
-    let mut manager1 = DeterministicManager::with_seed(42);
-    let mut manager2 = DeterministicManager::with_seed(42);
+    let mut manager1 = DeterministicManager::new(42);
+    let mut manager2 = DeterministicManager::new(42);
 
     // Generate deterministic output from both managers
     let output1 = manager1.generate_output(5)?;

@@ -4,7 +4,6 @@ use crate::error::Result;
 use crate::cleanroom::CleanroomEnvironment;
 use crate::serializable_instant::SerializableInstant;
 use std::sync::Arc;
-use std::time::Instant;
 use std::collections::HashMap;
 use tokio::sync::RwLock;
 use serde::{Deserialize, Serialize};
@@ -420,7 +419,7 @@ impl ObservabilityManager {
         }
 
         // Trace with tracing crate
-        tracing::info_span!("cleanroom_span", span_id = %span_id).entered();
+        let _entered = tracing::info_span!("cleanroom_span", span_id = %span_id).entered();
 
         Ok(span_id)
     }
@@ -435,7 +434,9 @@ impl ObservabilityManager {
         };
 
         span.end_time = Some(SerializableInstant::now());
-        span.duration = Some(span.end_time.unwrap().duration_since(span.start_time));
+        if let Some(end_time) = span.end_time {
+            span.duration = Some(end_time.duration_since(span.start_time));
+        }
         span.status = status;
 
         // Collect span
@@ -537,10 +538,16 @@ pub struct ObservabilityStatistics {
 #[derive(Debug)]
 pub struct ConsoleMetricsExporter;
 
+impl Default for ConsoleMetricsExporter {
+    fn default() -> Self {
+        Self
+    }
+}
+
 impl ConsoleMetricsExporter {
     /// Create a new console metrics exporter
     pub fn new() -> Self {
-        Self
+        Self::default()
     }
 }
 

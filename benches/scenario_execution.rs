@@ -3,11 +3,9 @@
 //! This benchmark measures the performance of scenario creation,
 //! execution, and various scenario operations.
 
-use crate::cleanroom::backend::{Backend, Cmd};
-use crate::cleanroom::error::Result;
-use crate::cleanroom::policy::Policy;
-use crate::cleanroom::scenario::{RunResult, Scenario, Step, StepResult, StepSource};
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use clnrm::{Policy, Scenario, RunResult};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use std::hint::black_box;
 use std::collections::HashMap;
 use std::time::Duration;
 

@@ -99,6 +99,7 @@ impl std::fmt::Debug for ServiceManager {
     }
 }
 
+
 impl ServiceManager {
     /// Create a new service manager
     pub fn new() -> Self {

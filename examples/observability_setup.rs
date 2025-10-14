@@ -5,7 +5,7 @@
 
 use clnrm::{
     CleanroomConfig, CleanroomEnvironment, CleanroomBuilder,
-    ObservabilityLayer, TracingLevel, Metrics, TracingManager
+    ObservabilityLayer, TracingLevel, Metrics, TracingManager, SerializableInstant
 };
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -81,7 +81,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example 5: Metrics collection
     println!("\n5. Metrics Collection");
     let metrics = Metrics {
-        timestamp: Instant::now(),
+        timestamp: SerializableInstant::now(),
         session_id,
         resource_usage: clnrm::observability::ResourceUsageMetrics {
             cpu_usage_percent: 25.5,
@@ -104,9 +104,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         tests: clnrm::observability::TestMetrics {
             total_executed: 100,
-            total_passed: 95,
-            total_failed: 5,
-            avg_execution_time: Duration::from_millis(120),
+            passed: 95,
+            failed: 5,
+            success_rate: 0.95,
+            avg_duration: Duration::from_millis(120),
         },
     };
 
@@ -115,7 +116,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - Memory usage: {} MB", metrics.resource_usage.memory_usage_bytes / (1024 * 1024));
     println!("  - Tests executed: {}", metrics.tests.total_executed);
     println!("  - Success rate: {:.1}%", 
-        (metrics.tests.total_passed as f64 / metrics.tests.total_executed as f64) * 100.0);
+        (metrics.tests.passed as f64 / metrics.tests.total_executed as f64) * 100.0);
 
     println!("\n✓ All observability examples completed successfully!");
     Ok(())

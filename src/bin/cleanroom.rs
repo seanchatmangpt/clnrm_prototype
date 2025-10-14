@@ -40,7 +40,7 @@ use std::path::PathBuf;
 use uuid::Uuid;
 
 use clnrm::{
-    run, run_with_policy, Assert, CleanroomConfig, CleanroomEnvironment, Policy, RunResult,
+    run_with_policy, CleanroomConfig, CleanroomEnvironment, Policy, RunResult,
 };
 
 /// Cleanroom CLI - Deterministic testing with swarm coordination
