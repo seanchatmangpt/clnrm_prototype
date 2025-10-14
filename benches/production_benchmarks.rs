@@ -25,8 +25,8 @@
 //! cargo bench --bench production_benchmarks
 //! ```
 
-use clnrm::{CleanroomConfig, CleanroomEnvironment};
 use clnrm::error::CleanroomError;
+use clnrm::{CleanroomConfig, CleanroomEnvironment};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use std::hint::black_box;
 use std::sync::Arc;
@@ -132,12 +132,9 @@ fn bench_multiple_container_registrations(c: &mut Criterion) {
                     let env = CleanroomEnvironment::new(config).await.unwrap();
 
                     for i in 0..size {
-                        env.register_container(
-                            format!("container_{}", i),
-                            format!("id_{}", i),
-                        )
-                        .await
-                        .unwrap();
+                        env.register_container(format!("container_{}", i), format!("id_{}", i))
+                            .await
+                            .unwrap();
                     }
 
                     black_box(env.get_container_count().await)
@@ -331,12 +328,9 @@ fn bench_memory_usage_multiple_containers(c: &mut Criterion) {
                         let env = CleanroomEnvironment::new(config).await.unwrap();
 
                         for i in 0..container_count {
-                            env.register_container(
-                                format!("container_{}", i),
-                                format!("id_{}", i),
-                            )
-                            .await
-                            .unwrap();
+                            env.register_container(format!("container_{}", i), format!("id_{}", i))
+                                .await
+                                .unwrap();
                         }
 
                         let metrics = env.get_metrics().await;
@@ -479,13 +473,7 @@ fn bench_concurrent_metrics_reads(c: &mut Criterion) {
 fn bench_async_task_spawning_overhead(c: &mut Criterion) {
     c.bench_function("async_task_spawning_overhead", |b| {
         b.to_async(tokio::runtime::Runtime::new().unwrap())
-            .iter(|| async {
-                black_box(
-                    tokio::spawn(async { 42 })
-                        .await
-                        .unwrap(),
-                )
-            });
+            .iter(|| async { black_box(tokio::spawn(async { 42 }).await.unwrap()) });
     });
 }
 

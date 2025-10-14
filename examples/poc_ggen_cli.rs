@@ -505,8 +505,14 @@ fn demo_ggen_policy() -> Result<()> {
         "Network isolation enabled: {}",
         policy.security.enable_network_isolation
     );
-    println!("Filesystem isolation: {}", policy.security.enable_filesystem_isolation);
-    println!("Process isolation: {}", policy.security.enable_process_isolation);
+    println!(
+        "Filesystem isolation: {}",
+        policy.security.enable_filesystem_isolation
+    );
+    println!(
+        "Process isolation: {}",
+        policy.security.enable_process_isolation
+    );
 
     // Create permissive policy
     let permissive_policy = Policy::with_security_level(SecurityLevel::Low);

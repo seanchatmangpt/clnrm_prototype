@@ -228,7 +228,7 @@ macro_rules! mock_timeout {
 }
 
 /// Conditional sleep that uses mock time in tests
-/// 
+///
 /// This function is now re-exported from the main library.
 /// Use `clnrm::conditional_sleep` instead.
 pub async fn conditional_sleep(duration: Duration) {
@@ -236,10 +236,13 @@ pub async fn conditional_sleep(duration: Duration) {
 }
 
 /// Conditional timeout that uses mock time in tests
-/// 
+///
 /// This function is now re-exported from the main library.
 /// Use `clnrm::conditional_timeout` instead.
-pub async fn conditional_timeout<F, T>(duration: Duration, future: F) -> Result<T, tokio::time::error::Elapsed>
+pub async fn conditional_timeout<F, T>(
+    duration: Duration,
+    future: F,
+) -> Result<T, tokio::time::error::Elapsed>
 where
     F: std::future::Future<Output = T>,
 {
@@ -255,10 +258,10 @@ mod tests {
     async fn test_mock_time_basic() {
         let mock_time = MockTime::new();
         let start = mock_time.now();
-        
+
         mock_time.advance(Duration::from_secs(5));
         let after_advance = mock_time.now();
-        
+
         assert_eq!(after_advance.duration_since(start), Duration::from_secs(5));
     }
 
@@ -266,10 +269,10 @@ mod tests {
     async fn test_mock_sleep() {
         let mock_time = MockTime::new();
         let start = mock_time.now();
-        
+
         // Mock sleep should complete immediately
         mock_time.sleep(Duration::from_secs(10)).await;
-        
+
         let after_sleep = mock_time.now();
         assert_eq!(after_sleep.duration_since(start), Duration::from_secs(10));
     }
@@ -277,23 +280,22 @@ mod tests {
     #[tokio::test]
     async fn test_mock_timeout() {
         let mock_time = MockTime::new();
-        
+
         // Mock timeout should not actually timeout
-        let result = mock_time.timeout(
-            Duration::from_millis(1),
-            async { "success" }
-        ).await;
-        
+        let result = mock_time
+            .timeout(Duration::from_millis(1), async { "success" })
+            .await;
+
         assert_eq!(result, Ok("success"));
     }
 
     #[tokio::test]
     async fn test_conditional_sleep() {
         let start = Instant::now();
-        
+
         // This should complete immediately in test mode
         conditional_sleep(Duration::from_secs(1)).await;
-        
+
         let duration = start.elapsed();
         // Should be much faster than 1 second
         assert!(duration < Duration::from_millis(100));
@@ -302,24 +304,23 @@ mod tests {
     #[tokio::test]
     async fn test_conditional_timeout() {
         // This should not timeout in test mode
-        let result = conditional_timeout(
-            Duration::from_millis(1),
-            async { "success" }
-        ).await;
-        
+        let result = conditional_timeout(Duration::from_millis(1), async { "success" }).await;
+
         assert_eq!(result, Ok("success"));
     }
 
     #[tokio::test]
     async fn test_mock_time_env() {
         let env = MockTimeTestEnv::new();
-        
-        let result = env.run_test(|mock_time| async move {
-            let start = mock_time.now();
-            mock_time.sleep(Duration::from_secs(5)).await;
-            mock_time.now().duration_since(start)
-        }).await;
-        
+
+        let result = env
+            .run_test(|mock_time| async move {
+                let start = mock_time.now();
+                mock_time.sleep(Duration::from_secs(5)).await;
+                mock_time.now().duration_since(start)
+            })
+            .await;
+
         assert_eq!(result, Duration::from_secs(5));
     }
 }

@@ -3,8 +3,13 @@
 //! Tests for complex scenarios and workflows that involve multiple
 //! components working together in realistic usage patterns.
 
-use clnrm::{CleanroomConfig, CleanroomEnvironment, Error as CleanroomError};
+use clnrm::{
+    lifecycle::{LifecycleConfig, LifecycleManager},
+    CleanroomConfig, CleanroomEnvironment, Error as CleanroomError
+};
+use std::sync::Arc;
 use std::time::Duration;
+use tempfile::TempDir;
 
 /// Test complete test execution workflow
 #[tokio::test]

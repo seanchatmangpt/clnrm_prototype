@@ -98,7 +98,9 @@ struct PocRunResult {
 impl PocRunResult {
     /// Create from cleanroom RunResult
     fn from_cleanroom_result(
-        cleanroom_result: RunResult, backend: &str, duration_ms: u128,
+        cleanroom_result: RunResult,
+        backend: &str,
+        duration_ms: u128,
     ) -> Self {
         Self {
             backend: backend.to_string(),
@@ -287,8 +289,14 @@ fn demo_policy() -> Result<()> {
         "Network isolation enabled: {}",
         policy.security.enable_network_isolation
     );
-    println!("Filesystem isolation: {}", policy.security.enable_filesystem_isolation);
-    println!("Process isolation: {}", policy.security.enable_process_isolation);
+    println!(
+        "Filesystem isolation: {}",
+        policy.security.enable_filesystem_isolation
+    );
+    println!(
+        "Process isolation: {}",
+        policy.security.enable_process_isolation
+    );
 
     // Create permissive policy
     let permissive_policy = Policy::low_security();
@@ -422,13 +430,13 @@ mod tests {
     #[tokio::test]
     async fn test_deterministic_manager() {
         let manager = DeterministicManager::new(42);
-        
+
         let random1 = manager.random().await;
         let random2 = manager.random().await;
-        
+
         // Should be deterministic (same seed produces same sequence)
         assert_ne!(random1, random2); // Different values in sequence
-        
+
         let port1 = manager.allocate_port().await.unwrap();
         let port2 = manager.allocate_port().await.unwrap();
         assert_eq!(port1, 10000);

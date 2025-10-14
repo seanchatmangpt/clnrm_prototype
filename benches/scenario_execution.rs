@@ -3,10 +3,10 @@
 //! This benchmark measures the performance of scenario creation,
 //! execution, and various scenario operations.
 
-use clnrm::{Policy, Scenario, RunResult};
+use clnrm::{Policy, RunResult, Scenario};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use std::hint::black_box;
 use std::collections::HashMap;
+use std::hint::black_box;
 use std::time::Duration;
 
 fn bench_scenario_creation(c: &mut Criterion) {

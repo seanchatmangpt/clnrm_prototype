@@ -4,8 +4,8 @@
 //! including container lifecycle, service integration, and error handling.
 
 use clnrm::{
-    run, CleanroomConfig, CleanroomEnvironment,
-    Error as CleanroomError, Assert, ResourceLimits, new_cleanroom,
+    new_cleanroom, run, Assert, CleanroomConfig, CleanroomEnvironment, Error as CleanroomError,
+    ResourceLimits,
 };
 use std::time::Duration;
 
@@ -32,7 +32,9 @@ async fn test_container_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
     let mut environment = CleanroomEnvironment::new(config).await?;
 
     // Test container registration
-    environment.register_container("test1".to_string(), "container_id_123".to_string()).await?;
+    environment
+        .register_container("test1".to_string(), "container_id_123".to_string())
+        .await?;
     assert!(environment.is_container_registered("test1").await);
 
     // Test container access
@@ -193,7 +195,6 @@ async fn test_configuration_validation() -> Result<(), Box<dyn std::error::Error
 
     Ok(())
 }
-
 
 /// Test basic Docker integration with simple command execution
 #[tokio::test]

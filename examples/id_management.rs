@@ -3,7 +3,9 @@
 //! This example shows how to use the type-safe ID system for containers,
 //! sessions, tasks, tests, and scenarios with proper type safety.
 
-use clnrm::{CleanroomConfig, CleanroomEnvironment, ContainerId, SessionId, TaskId, TestId, ScenarioId};
+use clnrm::{
+    CleanroomConfig, CleanroomEnvironment, ContainerId, ScenarioId, SessionId, TaskId, TestId,
+};
 use uuid::Uuid;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

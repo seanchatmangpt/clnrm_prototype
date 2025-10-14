@@ -65,14 +65,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Security level: {:?}",
         env.config().policy.security.security_level
     );
-    println!(
-        "Test timeout: {:?}",
-        env.config().test_execution_timeout
-    );
-    println!(
-        "Session ID: {}",
-        env.session_id()
-    );
+    println!("Test timeout: {:?}", env.config().test_execution_timeout);
+    println!("Session ID: {}", env.session_id());
 
     println!("\n=== All Examples Completed Successfully ===");
     Ok(())

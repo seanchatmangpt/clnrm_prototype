@@ -58,8 +58,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Updated Metrics:");
     println!("   Tests executed: {}", updated_metrics.tests_executed);
     println!("   Tests passed: {}", updated_metrics.tests_passed);
-    println!("   Success rate: {:.1}%", 
-        (updated_metrics.tests_passed as f64 / updated_metrics.tests_executed as f64) * 100.0);
+    println!(
+        "   Success rate: {:.1}%",
+        (updated_metrics.tests_passed as f64 / updated_metrics.tests_executed as f64) * 100.0
+    );
 
     println!("\n✅ All examples completed successfully!");
     Ok(())

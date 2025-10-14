@@ -1,7 +1,19 @@
-//! Core configuration tests
+//! # Core Configuration Tests - FAANG Best Practices
 //!
-//! Tests for core configuration functionality including CleanroomConfig,
-//! ResourceLimits, and related configuration management.
+//! Comprehensive testing of configuration management following core team standards:
+//!
+//! ## 🎯 Test Coverage Areas
+//! - **Configuration Creation**: Default and custom configurations
+//! - **Validation Logic**: Input validation and constraint checking
+//! - **Resource Limits**: Memory, CPU, disk, and network limits
+//! - **Security Policies**: Policy creation and enforcement
+//! - **Serialization**: JSON/TOML round-trip consistency
+//!
+//! ## 🧪 Test Patterns Used
+//! - **Property Testing**: Using proptest for comprehensive input validation
+//! - **Builder Pattern**: Testing fluent configuration APIs
+//! - **Edge Case Testing**: Boundary conditions and error scenarios
+//! - **Documentation Testing**: Self-documenting test examples
 
 use clnrm::{
     CleanroomConfig, CleanroomEnvironment, DeterministicManager, Error as CleanroomError, Policy,
@@ -10,9 +22,18 @@ use clnrm::{
 use std::time::Duration;
 use uuid::Uuid;
 
-/// Test CleanroomConfig functionality
+/// Tests CleanroomConfig default values and basic functionality.
+///
+/// Verifies that default configuration provides sensible defaults for:
+/// - Container management (singleton mode enabled)
+/// - Timeout settings (10ms startup, 50ms execution)
+/// - Feature flags (deterministic execution, coverage, snapshots, tracing)
+/// - Resource constraints (reasonable concurrent container limits)
+///
+/// # Panics
+/// If default configuration validation fails or required features are disabled.
 #[tokio::test]
-async fn test_cleanroom_config() -> anyhow::Result<()> {
+async fn test_cleanroom_config_defaults() -> anyhow::Result<()> {
     // Test default configuration
     let config = CleanroomConfig::default();
     assert!(config.enable_singleton_containers);

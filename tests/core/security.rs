@@ -1,7 +1,55 @@
 //! Security-related tests for cleanroom testing framework
 //!
-//! This module tests security policies, isolation mechanisms, and access controls
-//! to ensure the cleanroom environment provides proper security boundaries.
+//! # Security Testing Best Practices
+//!
+//! ## Test Organization
+//! ```rust
+//! #[cfg(test)]
+//! mod security_tests {
+//!     use super::*;
+//!     use proptest::prelude::*;
+//!
+//!     // 1. Unit tests for individual security functions
+//!     #[test]
+//!     fn test_security_policy_creation() { /* ... */ }
+//!
+//!     // 2. Integration tests for security components
+//!     #[tokio::test]
+//!     async fn test_security_policy_enforcement() { /* ... */ }
+//!
+//!     // 3. Property tests for security invariants
+//!     proptest! {
+//!         #[test]
+//!         fn test_security_policy_properties(
+//!             level in prop::sample::select(&[
+//!                 SecurityLevel::Permissive,
+//!                 SecurityLevel::Standard,
+//!                 SecurityLevel::Strict,
+//!                 SecurityLevel::Locked,
+//!             ]),
+//!         ) {
+//!             // Test that security levels maintain invariants
+//!             let policy = SecurityPolicy::with_security_level(level);
+//!             prop_assert!(policy.validate().is_ok());
+//!         }
+//!     }
+//! }
+//! ```
+//!
+//! ## Security Test Patterns
+//! - **Authorization Tests**: Test access control and permissions
+//! - **Authentication Tests**: Test credential validation
+//! - **Isolation Tests**: Test sandbox boundaries
+//! - **Injection Tests**: Test against malicious inputs
+//! - **Boundary Tests**: Test edge cases and limits
+//!
+//! ## Security Test Naming
+//! ```rust
+//! test_security_policy_locked_blocks_all_network_access
+//! test_security_policy_permissive_allows_filesystem_access
+//! test_security_policy_strict_validates_allowed_ports
+//! test_security_policy_serialization_preserves_security_level
+//! ```
 
 use clnrm::{
     policy::{FilesystemIsolation, NetworkIsolation, SecurityLevel, SecurityPolicy},

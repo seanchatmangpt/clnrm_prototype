@@ -1,9 +1,35 @@
-//! Test configuration fixtures and builders
+//! # Test Configuration Fixtures - FAANG Best Practices
 //!
-//! Provides standardized test configurations for different testing scenarios.
+//! Production-quality test configuration management following core team standards.
+//!
+//! ## 🏃‍♂️ Fast Execution Configurations
+//! - **Unit Tests**: Microsecond timeouts for maximum speed
+//! - **Integration Tests**: Millisecond timeouts for component interaction
+//! - **Performance Tests**: Optimized for load testing scenarios
+//!
+//! ## 🛡️ Security Configurations
+//! - **Mock Tests**: Deterministic execution with known seeds
+//! - **Security Tests**: High security policies for validation
+//! - **Concurrent Tests**: Parallel execution optimization
+//!
+//! ## 🏗️ Builder Pattern Support
+//! ```rust
+//! use crate::fixtures::*;
+//!
+//! // Start with a preset and customize
+//! let config = TestConfigBuilder::with_preset(TestConfigs::unit_test)
+//!     .max_concurrent_containers(5)
+//!     .security_policy(SecurityLevel::High)
+//!     .build();
+//! ```
 
-use clnrm::{CleanroomConfig, SecurityLevel, SecurityPolicy, ResourceLimits};
-use std::time::Duration;
+use clnrm::{
+    CleanroomConfig, SecurityLevel, SecurityPolicy, ResourceLimits,
+    config::PerformanceMonitoringConfig,
+    limits::ResourceLimits as Limits,
+    policy::SecurityPolicy as Policy,
+};
+use std::{collections::HashMap, time::Duration};
 
 /// Test configuration presets for different scenarios
 pub struct TestConfigs;

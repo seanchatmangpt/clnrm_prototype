@@ -3,9 +3,7 @@
 //! This test consolidates all file operation testing into a single, comprehensive suite
 //! that uses the fixtures infrastructure for better maintainability and consistency.
 
-use clnrm::{
-    CleanroomConfig, CleanroomEnvironment, CleanroomGuard, GenericContainer,
-};
+use clnrm::{CleanroomConfig, CleanroomEnvironment, CleanroomGuard, GenericContainer};
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
@@ -75,11 +73,7 @@ async fn test_multiple_file_operations() {
     let environment_arc = Arc::new(environment);
     let _guard = CleanroomGuard::new(environment_arc.clone());
 
-    let test_files = vec![
-        "test_file_1.txt",
-        "test_file_2.txt",
-        "test_file_3.txt",
-    ];
+    let test_files = vec!["test_file_1.txt", "test_file_2.txt", "test_file_3.txt"];
 
     // Clean up any existing files
     for file in &test_files {
@@ -127,7 +121,10 @@ async fn test_file_content_types() {
     let multiline_file = "multiline.txt";
     let multiline_content = "Line 1\nLine 2\nLine 3\n";
     fs::write(multiline_file, multiline_content).unwrap();
-    assert_eq!(fs::read_to_string(multiline_file).unwrap(), multiline_content);
+    assert_eq!(
+        fs::read_to_string(multiline_file).unwrap(),
+        multiline_content
+    );
     fs::remove_file(multiline_file).unwrap();
 
     // Test special characters

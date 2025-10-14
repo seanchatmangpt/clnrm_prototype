@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Err::<i32, clnrm::Error>(clnrm::Error::validation_error("Test failure"))
         })
         .await;
-    
+
     match result {
         Ok(_) => println!("✗ Expected failure but got success"),
         Err(e) => println!("✓ Expected failure: {}", e),

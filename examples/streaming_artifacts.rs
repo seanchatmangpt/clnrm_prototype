@@ -4,8 +4,8 @@
 //! processing with zero-copy techniques and various collector patterns.
 
 use clnrm::{
-    CleanroomConfig, CleanroomEnvironment, CleanroomBuilder,
-    ArtifactStream, StreamingCollector, ArtifactData, ArtifactMetadata, ArtifactType
+    ArtifactData, ArtifactMetadata, ArtifactStream, ArtifactType, CleanroomBuilder,
+    CleanroomConfig, CleanroomEnvironment, StreamingCollector,
 };
 use std::borrow::Cow;
 use std::time::Instant;
@@ -53,14 +53,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example 3: Filtering by type
     println!("\n3. Filtering by Type");
     let stream = ArtifactStream::new(environment.clone());
-    let collector = stream
-        .collect_into(StreamingCollector::new(100))
-        .await?;
+    let collector = stream.collect_into(StreamingCollector::new(100)).await?;
 
     // Filter artifacts by type manually
     let text_artifacts: Vec<_> = collector.artifacts_by_type(&ArtifactType::Text);
     let json_artifacts: Vec<_> = collector.artifacts_by_type(&ArtifactType::Json);
-    
+
     println!("✓ Text artifacts: {}", text_artifacts.len());
     println!("✓ JSON artifacts: {}", json_artifacts.len());
 
@@ -94,12 +92,15 @@ mod tests {
         let config = CleanroomConfig::default();
         let environment = CleanroomEnvironment::new(config).await.unwrap();
         let stream = ArtifactStream::new(environment);
-        
+
         let mut count = 0;
-        stream.stream_artifacts(|_artifact| {
+        stream
+            .stream_artifacts(|_artifact| {
                 count += 1;
                 Ok(())
-        }).await.unwrap();
+            })
+            .await
+            .unwrap();
 
         assert!(count >= 0); // Should not panic
     }
@@ -109,9 +110,12 @@ mod tests {
         let config = CleanroomConfig::default();
         let environment = CleanroomEnvironment::new(config).await.unwrap();
         let stream = ArtifactStream::new(environment);
-        
-        let collector = stream.collect_into(StreamingCollector::with_zero_copy()).await.unwrap();
-        
+
+        let collector = stream
+            .collect_into(StreamingCollector::with_zero_copy())
+            .await
+            .unwrap();
+
         assert!(collector.count() >= 0);
         assert!(collector.total_size() >= 0);
     }
@@ -121,18 +125,21 @@ mod tests {
         let config = CleanroomConfig::default();
         let environment = CleanroomEnvironment::new(config).await.unwrap();
         let stream = ArtifactStream::new(environment);
-        
-        let collector = stream.collect_into(StreamingCollector::new(100)).await.unwrap();
-        
+
+        let collector = stream
+            .collect_into(StreamingCollector::new(100))
+            .await
+            .unwrap();
+
         // Test basic statistics
         assert!(collector.duration() >= Duration::from_secs(0));
         assert!(collector.count() >= 0);
         assert!(collector.total_size() >= 0);
-        
+
         // Test filtering methods
         let _text_artifacts = collector.artifacts_by_type(&ArtifactType::Text);
         let _json_artifacts = collector.artifacts_by_type(&ArtifactType::Json);
-        
+
         // Test source filtering
         let _artifacts_by_source = collector.artifacts_by_source("test");
     }

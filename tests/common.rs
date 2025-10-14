@@ -1,5 +1,6 @@
 //! Common test utilities and shared test code for cleanroom framework
 
+use clnrm::conditional_sleep;
 use clnrm::{
     CleanroomConfig, CleanroomEnvironment, Error as CleanroomError, GenericContainer, Policy,
     PostgresContainer, RedisContainer, ResourceLimits, SecurityLevel,
@@ -7,7 +8,6 @@ use clnrm::{
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::timeout;
-use clnrm::conditional_sleep;
 
 /// Common test timeout duration
 pub const TEST_TIMEOUT: Duration = Duration::from_millis(10);
@@ -442,10 +442,10 @@ pub mod generators {
                     enable_coverage_tracking: enable_coverage,
                     enable_snapshot_testing: enable_snapshots,
                     enable_tracing: enable_tracing,
-                    security_policy: if enable_security { 
-                        clnrm::policy::SecurityPolicy::default() 
-                    } else { 
-                        clnrm::policy::SecurityPolicy::default() 
+                    security_policy: if enable_security {
+                        clnrm::policy::SecurityPolicy::default()
+                    } else {
+                        clnrm::policy::SecurityPolicy::default()
                     },
                     ..CleanroomConfig::default()
                 },

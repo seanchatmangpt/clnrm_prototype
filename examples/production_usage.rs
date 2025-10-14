@@ -5,9 +5,9 @@
 //! handling, and best practices for enterprise deployments.
 
 use clnrm::{
-    CleanroomBuilder, CleanroomEnvironment, CleanroomConfig, Policy, SecurityLevel,
-    SecurityPolicy, ResourceLimits, TracingManager, SpanStatus, MetricType, LogLevel,
-    PostgresContainer, RedisContainer, Result,
+    CleanroomBuilder, CleanroomConfig, CleanroomEnvironment, LogLevel, MetricType, Policy,
+    PostgresContainer, RedisContainer, ResourceLimits, Result, SecurityLevel, SecurityPolicy,
+    SpanStatus, TracingManager,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -78,20 +78,17 @@ async fn database_integration_testing() -> Result<()> {
     let environment = production_environment_setup().await?;
 
     // Create PostgreSQL container (singleton pattern - reused across tests)
-    let postgres = environment.get_or_create_container("postgres", || {
-        PostgresContainer::new(
-            &environment.backend(),
-            "testdb",
-            "testuser",
-            "testpass"
-        )
-    }).await;
+    let postgres = environment
+        .get_or_create_container("postgres", || {
+            PostgresContainer::new(&environment.backend(), "testdb", "testuser", "testpass")
+        })
+        .await;
 
     match postgres {
         Ok(_) => {
             println!("PostgreSQL container created (first call takes 30-60s)");
             println!("Subsequent calls reuse container (2-5ms)\n");
-        },
+        }
         Err(e) => {
             eprintln!("Failed to create PostgreSQL container: {}", e);
             return Err(e);
@@ -99,11 +96,13 @@ async fn database_integration_testing() -> Result<()> {
     }
 
     // Run database integration test
-    let result = environment.execute_test("database_integration", || {
-        println!("Running database integration test...");
-        // Your database test logic here
-        Ok("Database integration test passed".to_string())
-    }).await?;
+    let result = environment
+        .execute_test("database_integration", || {
+            println!("Running database integration test...");
+            // Your database test logic here
+            Ok("Database integration test passed".to_string())
+        })
+        .await?;
 
     println!("Test result: {}\n", result);
 
@@ -124,79 +123,104 @@ async fn observability_example() -> Result<()> {
     let tracing_manager = TracingManager::new(session_id);
 
     // Start root span for request
-    let request_span_id = tracing_manager.start_span("http_request".to_string(), None).await?;
-    tracing_manager.add_span_tag("http_request", "method".to_string(), "POST".to_string()).await?;
-    tracing_manager.add_span_tag("http_request", "endpoint".to_string(), "/api/users".to_string()).await?;
+    let request_span_id = tracing_manager
+        .start_span("http_request".to_string(), None)
+        .await?;
+    tracing_manager
+        .add_span_tag("http_request", "method".to_string(), "POST".to_string())
+        .await?;
+    tracing_manager
+        .add_span_tag(
+            "http_request",
+            "endpoint".to_string(),
+            "/api/users".to_string(),
+        )
+        .await?;
 
     // Start child span for database query
-    let db_span_id = tracing_manager.start_span(
-        "database_query".to_string(),
-        Some(request_span_id)
-    ).await?;
+    let db_span_id = tracing_manager
+        .start_span("database_query".to_string(), Some(request_span_id))
+        .await?;
 
     // Add event to database span
     let mut event_data = HashMap::new();
-    event_data.insert("query".to_string(), "SELECT * FROM users WHERE id = ?".to_string());
-    tracing_manager.add_span_event("database_query", "query_start".to_string(), event_data).await?;
+    event_data.insert(
+        "query".to_string(),
+        "SELECT * FROM users WHERE id = ?".to_string(),
+    );
+    tracing_manager
+        .add_span_event("database_query", "query_start".to_string(), event_data)
+        .await?;
 
     // Record query duration metric
-    tracing_manager.record_metric(
-        "database_query_duration_ms".to_string(),
-        42.5,
-        MetricType::Histogram,
-        {
-            let mut tags = HashMap::new();
-            tags.insert("table".to_string(), "users".to_string());
-            tags.insert("operation".to_string(), "SELECT".to_string());
-            tags
-        },
-        Some("ms".to_string())
-    ).await?;
+    tracing_manager
+        .record_metric(
+            "database_query_duration_ms".to_string(),
+            42.5,
+            MetricType::Histogram,
+            {
+                let mut tags = HashMap::new();
+                tags.insert("table".to_string(), "users".to_string());
+                tags.insert("operation".to_string(), "SELECT".to_string());
+                tags
+            },
+            Some("ms".to_string()),
+        )
+        .await?;
 
     // Complete database span
-    tracing_manager.end_span("database_query", SpanStatus::Completed).await?;
+    tracing_manager
+        .end_span("database_query", SpanStatus::Completed)
+        .await?;
 
     // Start child span for cache lookup
-    let cache_span_id = tracing_manager.start_span(
-        "cache_lookup".to_string(),
-        Some(request_span_id)
-    ).await?;
+    let cache_span_id = tracing_manager
+        .start_span("cache_lookup".to_string(), Some(request_span_id))
+        .await?;
 
     // Record cache hit metric
-    tracing_manager.record_metric(
-        "cache_hits_total".to_string(),
-        1.0,
-        MetricType::Counter,
-        {
-            let mut tags = HashMap::new();
-            tags.insert("cache_type".to_string(), "redis".to_string());
-            tags
-        },
-        Some("count".to_string())
-    ).await?;
+    tracing_manager
+        .record_metric(
+            "cache_hits_total".to_string(),
+            1.0,
+            MetricType::Counter,
+            {
+                let mut tags = HashMap::new();
+                tags.insert("cache_type".to_string(), "redis".to_string());
+                tags
+            },
+            Some("count".to_string()),
+        )
+        .await?;
 
     // Log cache hit
-    tracing_manager.log(
-        LogLevel::Info,
-        "Cache hit for user data".to_string(),
-        Some("cache.rs:123".to_string()),
-        {
-            let mut tags = HashMap::new();
-            tags.insert("cache_key".to_string(), "user:123".to_string());
-            tags
-        },
-        {
-            let mut metadata = HashMap::new();
-            metadata.insert("ttl_seconds".to_string(), "3600".to_string());
-            metadata
-        }
-    ).await?;
+    tracing_manager
+        .log(
+            LogLevel::Info,
+            "Cache hit for user data".to_string(),
+            Some("cache.rs:123".to_string()),
+            {
+                let mut tags = HashMap::new();
+                tags.insert("cache_key".to_string(), "user:123".to_string());
+                tags
+            },
+            {
+                let mut metadata = HashMap::new();
+                metadata.insert("ttl_seconds".to_string(), "3600".to_string());
+                metadata
+            },
+        )
+        .await?;
 
     // Complete cache span
-    tracing_manager.end_span("cache_lookup", SpanStatus::Completed).await?;
+    tracing_manager
+        .end_span("cache_lookup", SpanStatus::Completed)
+        .await?;
 
     // Complete request span
-    tracing_manager.end_span("http_request", SpanStatus::Completed).await?;
+    tracing_manager
+        .end_span("http_request", SpanStatus::Completed)
+        .await?;
 
     // Generate comprehensive tracing report
     let report = tracing_manager.generate_tracing_report().await?;
@@ -205,7 +229,10 @@ async fn observability_example() -> Result<()> {
     println!("  Session ID: {}", report.session_id);
     println!("  Total spans: {}", report.statistics.total_spans);
     println!("  Completed spans: {}", report.statistics.completed_spans);
-    println!("  Average span duration: {:.2}ms", report.statistics.average_span_duration_ms);
+    println!(
+        "  Average span duration: {:.2}ms",
+        report.statistics.average_span_duration_ms
+    );
     println!("  Total metrics: {}", report.statistics.total_metrics);
     println!("  Total logs: {}", report.statistics.total_logs);
 
@@ -237,26 +264,29 @@ async fn error_handling_example() -> Result<()> {
     let mut retry_count = 0;
 
     loop {
-        match environment.execute_test("flaky_test", || {
-            println!("Attempt {} of {}", retry_count + 1, max_retries);
+        match environment
+            .execute_test("flaky_test", || {
+                println!("Attempt {} of {}", retry_count + 1, max_retries);
 
-            // Simulate flaky test
-            if retry_count < 2 {
-                Err(clnrm::Error::execution_error("Transient failure"))
-            } else {
-                Ok("Test passed after retry".to_string())
-            }
-        }).await {
+                // Simulate flaky test
+                if retry_count < 2 {
+                    Err(clnrm::Error::execution_error("Transient failure"))
+                } else {
+                    Ok("Test passed after retry".to_string())
+                }
+            })
+            .await
+        {
             Ok(result) => {
                 println!("Success: {}\n", result);
                 break;
-            },
+            }
             Err(clnrm::Error::Execution(msg)) if retry_count < max_retries - 1 => {
                 retry_count += 1;
                 println!("Retrying due to error: {}", msg);
                 tokio::time::sleep(Duration::from_millis(100 * (retry_count as u64))).await;
                 continue;
-            },
+            }
             Err(e) => {
                 eprintln!("Failed after {} retries: {}\n", retry_count + 1, e);
                 return Err(e);
@@ -280,43 +310,52 @@ async fn concurrent_testing_example() -> Result<()> {
     let environment = production_environment_setup().await?;
 
     // Spawn multiple concurrent tasks
-    let task1 = environment.spawn_task_with_timeout(
-        "integration_test_1".to_string(),
-        Duration::from_secs(30),
-        |_ctx| {
-            Box::pin(async move {
-                println!("Running integration test 1...");
-                tokio::time::sleep(Duration::from_millis(100)).await;
-                Ok(42)
-            })
-        }
-    ).await?;
+    let task1 = environment
+        .spawn_task_with_timeout(
+            "integration_test_1".to_string(),
+            Duration::from_secs(30),
+            |_ctx| {
+                Box::pin(async move {
+                    println!("Running integration test 1...");
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                    Ok(42)
+                })
+            },
+        )
+        .await?;
 
-    let task2 = environment.spawn_task_with_timeout(
-        "integration_test_2".to_string(),
-        Duration::from_secs(30),
-        |_ctx| {
-            Box::pin(async move {
-                println!("Running integration test 2...");
-                tokio::time::sleep(Duration::from_millis(150)).await;
-                Ok(84)
-            })
-        }
-    ).await?;
+    let task2 = environment
+        .spawn_task_with_timeout(
+            "integration_test_2".to_string(),
+            Duration::from_secs(30),
+            |_ctx| {
+                Box::pin(async move {
+                    println!("Running integration test 2...");
+                    tokio::time::sleep(Duration::from_millis(150)).await;
+                    Ok(84)
+                })
+            },
+        )
+        .await?;
 
-    let task3 = environment.spawn_task_with_timeout(
-        "integration_test_3".to_string(),
-        Duration::from_secs(30),
-        |_ctx| {
-            Box::pin(async move {
-                println!("Running integration test 3...");
-                tokio::time::sleep(Duration::from_millis(200)).await;
-                Ok(126)
-            })
-        }
-    ).await?;
+    let task3 = environment
+        .spawn_task_with_timeout(
+            "integration_test_3".to_string(),
+            Duration::from_secs(30),
+            |_ctx| {
+                Box::pin(async move {
+                    println!("Running integration test 3...");
+                    tokio::time::sleep(Duration::from_millis(200)).await;
+                    Ok(126)
+                })
+            },
+        )
+        .await?;
 
-    println!("Spawned {} concurrent tasks", environment.get_active_task_count().await);
+    println!(
+        "Spawned {} concurrent tasks",
+        environment.get_active_task_count().await
+    );
 
     // Wait for all tasks to complete
     let results = environment.wait_for_all_tasks().await?;
@@ -324,7 +363,11 @@ async fn concurrent_testing_example() -> Result<()> {
     println!("All tasks completed:");
     for (i, result) in results.iter().enumerate() {
         match result.result {
-            Ok(_) => println!("  Task {} completed successfully in {:?}", i + 1, result.duration),
+            Ok(_) => println!(
+                "  Task {} completed successfully in {:?}",
+                i + 1,
+                result.duration
+            ),
             Err(ref e) => println!("  Task {} failed: {}", i + 1, e),
         }
     }
@@ -355,7 +398,10 @@ async fn health_monitoring_example() -> Result<()> {
 
     // Check environment health
     let is_healthy = environment.is_healthy().await;
-    println!("Environment health: {}", if is_healthy { "HEALTHY" } else { "UNHEALTHY" });
+    println!(
+        "Environment health: {}",
+        if is_healthy { "HEALTHY" } else { "UNHEALTHY" }
+    );
 
     // Get detailed health status
     let health_status = environment.get_health_status().await;
@@ -363,9 +409,11 @@ async fn health_monitoring_example() -> Result<()> {
 
     // Run some tests to generate metrics
     for i in 1..=5 {
-        environment.execute_test(&format!("test_{}", i), || {
-            Ok(format!("Test {} completed", i))
-        }).await?;
+        environment
+            .execute_test(&format!("test_{}", i), || {
+                Ok(format!("Test {} completed", i))
+            })
+            .await?;
     }
 
     // Get comprehensive metrics
@@ -376,11 +424,19 @@ async fn health_monitoring_example() -> Result<()> {
     println!("  Tests executed: {}", metrics.tests_executed);
     println!("  Tests passed: {}", metrics.tests_passed);
     println!("  Tests failed: {}", metrics.tests_failed);
-    println!("  Success rate: {:.2}%",
-        (metrics.tests_passed as f64 / metrics.tests_executed as f64) * 100.0);
+    println!(
+        "  Success rate: {:.2}%",
+        (metrics.tests_passed as f64 / metrics.tests_executed as f64) * 100.0
+    );
     println!("  Total duration: {}ms", metrics.total_duration_ms);
-    println!("  Average execution time: {:?}", metrics.average_execution_time);
-    println!("  Peak memory usage: {} bytes", metrics.peak_memory_usage_bytes);
+    println!(
+        "  Average execution time: {:?}",
+        metrics.average_execution_time
+    );
+    println!(
+        "  Peak memory usage: {} bytes",
+        metrics.peak_memory_usage_bytes
+    );
     println!("  Peak CPU usage: {:.2}%", metrics.peak_cpu_usage_percent);
     println!("  Containers created: {}", metrics.containers_created);
     println!("  Containers destroyed: {}", metrics.containers_destroyed);
@@ -388,11 +444,23 @@ async fn health_monitoring_example() -> Result<()> {
     // Check resource usage
     println!("\nResource Usage:");
     println!("  CPU: {:.2}%", metrics.resource_usage.cpu_usage_percent);
-    println!("  Memory: {} bytes", metrics.resource_usage.memory_usage_bytes);
+    println!(
+        "  Memory: {} bytes",
+        metrics.resource_usage.memory_usage_bytes
+    );
     println!("  Disk: {} bytes", metrics.resource_usage.disk_usage_bytes);
-    println!("  Network sent: {} bytes", metrics.resource_usage.network_bytes_sent);
-    println!("  Network received: {} bytes", metrics.resource_usage.network_bytes_received);
-    println!("  Active containers: {}", metrics.resource_usage.container_count);
+    println!(
+        "  Network sent: {} bytes",
+        metrics.resource_usage.network_bytes_sent
+    );
+    println!(
+        "  Network received: {} bytes",
+        metrics.resource_usage.network_bytes_received
+    );
+    println!(
+        "  Active containers: {}",
+        metrics.resource_usage.container_count
+    );
 
     println!();
     Ok(())
@@ -412,14 +480,11 @@ async fn multi_container_orchestration() -> Result<()> {
 
     // Start PostgreSQL (database)
     println!("Starting PostgreSQL...");
-    let postgres_result = environment.get_or_create_container("postgres", || {
-        PostgresContainer::new(
-            &environment.backend(),
-            "testdb",
-            "testuser",
-            "testpass"
-        )
-    }).await;
+    let postgres_result = environment
+        .get_or_create_container("postgres", || {
+            PostgresContainer::new(&environment.backend(), "testdb", "testuser", "testpass")
+        })
+        .await;
 
     match postgres_result {
         Ok(_) => println!("PostgreSQL ready"),
@@ -431,12 +496,11 @@ async fn multi_container_orchestration() -> Result<()> {
 
     // Start Redis (cache)
     println!("Starting Redis...");
-    let redis_result = environment.get_or_create_container("redis", || {
-        RedisContainer::new(
-            &environment.backend(),
-            Some("redis_password".to_string())
-        )
-    }).await;
+    let redis_result = environment
+        .get_or_create_container("redis", || {
+            RedisContainer::new(&environment.backend(), Some("redis_password".to_string()))
+        })
+        .await;
 
     match redis_result {
         Ok(_) => println!("Redis ready"),
@@ -447,11 +511,13 @@ async fn multi_container_orchestration() -> Result<()> {
     }
 
     // Run integration test with both services
-    let result = environment.execute_test("multi_service_integration", || {
-        println!("Running integration test with PostgreSQL and Redis...");
-        // Your integration test logic here
-        Ok("Multi-service integration test passed".to_string())
-    }).await?;
+    let result = environment
+        .execute_test("multi_service_integration", || {
+            println!("Running integration test with PostgreSQL and Redis...");
+            // Your integration test logic here
+            Ok("Multi-service integration test passed".to_string())
+        })
+        .await?;
 
     println!("Test result: {}", result);
 

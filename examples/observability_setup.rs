@@ -4,8 +4,8 @@
 //! cleanroom environment using tracing, metrics, and span collection.
 
 use clnrm::{
-    CleanroomConfig, CleanroomEnvironment, CleanroomBuilder,
-    ObservabilityLayer, TracingLevel, Metrics, TracingManager, SerializableInstant
+    CleanroomBuilder, CleanroomConfig, CleanroomEnvironment, Metrics, ObservabilityLayer,
+    SerializableInstant, TracingLevel, TracingManager,
 };
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -57,7 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Tracing Manager Usage");
     let session_id = Uuid::new_v4();
     let tracing_manager = TracingManager::new(session_id);
-    
+
     println!("✓ Tracing manager created with session ID: {}", session_id);
     println!("✓ Tracing enabled: {}", tracing_manager.is_enabled());
 
@@ -66,16 +66,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let span_id = tracing_manager
         .start_span("test_span".to_string(), None)
         .await?;
-    
+
     println!("✓ Started span: {}", span_id);
-    
+
     // Simulate some work
     tokio::time::sleep(Duration::from_millis(100)).await;
-    
+
     tracing_manager
         .end_span("test_span", clnrm::tracing::SpanStatus::Completed)
         .await?;
-    
+
     println!("✓ Ended span: test_span");
 
     // Example 5: Metrics collection
@@ -112,11 +112,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     println!("✓ Metrics collected:");
-    println!("  - CPU usage: {:.1}%", metrics.resource_usage.cpu_usage_percent);
-    println!("  - Memory usage: {} MB", metrics.resource_usage.memory_usage_bytes / (1024 * 1024));
+    println!(
+        "  - CPU usage: {:.1}%",
+        metrics.resource_usage.cpu_usage_percent
+    );
+    println!(
+        "  - Memory usage: {} MB",
+        metrics.resource_usage.memory_usage_bytes / (1024 * 1024)
+    );
     println!("  - Tests executed: {}", metrics.tests.total_executed);
-    println!("  - Success rate: {:.1}%", 
-        (metrics.tests.passed as f64 / metrics.tests.total_executed as f64) * 100.0);
+    println!(
+        "  - Success rate: {:.1}%",
+        (metrics.tests.passed as f64 / metrics.tests.total_executed as f64) * 100.0
+    );
 
     println!("\n✓ All observability examples completed successfully!");
     Ok(())
@@ -152,7 +160,7 @@ mod tests {
     async fn test_tracing_manager() {
         let session_id = Uuid::new_v4();
         let manager = TracingManager::new(session_id);
-        
+
         assert_eq!(manager.session_id, session_id);
         assert!(manager.is_enabled());
     }
@@ -161,14 +169,14 @@ mod tests {
     async fn test_span_operations() {
         let session_id = Uuid::new_v4();
         let manager = TracingManager::new(session_id);
-        
+
         let span_id = manager
             .start_span("test_span".to_string(), None)
             .await
             .unwrap();
-        
+
         assert!(!span_id.is_empty());
-        
+
         manager
             .end_span("test_span", clnrm::tracing::SpanStatus::Completed)
             .await
