@@ -126,10 +126,9 @@ impl Default for CoverageCollector {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    #![allow(clippy::unwrap_used, clippy::expect_used, unused_variables)]
     
-    // Allow unused variables in tests
-    #[allow(clippy::unwrap_used, clippy::expect_used, unused_variables)]
+    use super::*;
 
     #[test]
     fn test_coverage_collector_creation() {

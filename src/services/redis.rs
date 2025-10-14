@@ -92,7 +92,7 @@ impl Service for Redis {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::expect_used, clippy::get_first)]
+#[allow(clippy::unwrap_used, clippy::expect_used, clippy::get_first, clippy::panic)]
 mod tests {
     use super::*;
 

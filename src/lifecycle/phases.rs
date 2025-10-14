@@ -508,11 +508,10 @@ struct ValidationCheck {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic, clippy::let_unit_value)]
+    
     use super::*;
     use crate::lifecycle::config::LifecycleConfig;
-    
-    // Allow unwrap/expect in tests as they are expected to panic on failure
-    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic, clippy::let_unit_value)]
 
     #[tokio::test]
     async fn test_lifecycle_manager_creation() {

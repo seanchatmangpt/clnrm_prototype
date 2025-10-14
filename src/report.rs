@@ -700,8 +700,8 @@ impl ComprehensiveReport {
 mod tests {
     use super::*;
     
-    // Allow unwrap/expect in tests as they are expected to panic on failure
-    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic, clippy::unwrap_or_default, clippy::new_without_default)]
+    // Allow panics and unwrap in tests as they are expected to fail fast
+    #[allow(clippy::panic, clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::unwrap_or_default, clippy::new_without_default)]
 
     #[tokio::test]
     async fn test_test_report_creation() {
@@ -762,7 +762,7 @@ mod tests {
 
         let data = report.report_data.lock().await;
         assert_eq!(data.recommendations.len(), 1);
-        assert_eq!(data.recommendations[0], "Test recommendation");
+        assert_eq!(data.recommendations.first().unwrap(), "Test recommendation");
     }
 
     #[tokio::test]

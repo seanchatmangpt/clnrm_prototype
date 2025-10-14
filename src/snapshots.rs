@@ -584,7 +584,7 @@ mod tests {
         assert_eq!(data.snapshots.len(), 1);
         assert!(data.snapshots.contains_key("test_snapshot"));
 
-        let snapshot = &data.snapshots["test_snapshot"];
+        let snapshot = data.snapshots.get("test_snapshot").unwrap();
         assert_eq!(snapshot.name, "test_snapshot");
         assert_eq!(snapshot.content, "test content");
         assert!(matches!(
@@ -692,12 +692,11 @@ mod tests {
         let report = manager.generate_snapshot_report().await.unwrap_or_else(|e| panic!("Failed to generate report: {}", e));
         assert_eq!(report.session_id, session_id);
         assert_eq!(report.snapshots.len(), 1);
-        assert_eq!(report.snapshots[0].name, "test_snapshot");
+        assert_eq!(report.snapshots.first().unwrap().name, "test_snapshot");
     }
 
     #[test]
     fn test_snapshot_new() {
-        let session_id = Uuid::new_v4();
         let snapshot = Snapshot::new(
             "test_snapshot".to_string(),
             "test content".to_string(),
@@ -717,7 +716,6 @@ mod tests {
 
     #[test]
     fn test_snapshot_serialization() {
-        let session_id = Uuid::new_v4();
         let mut metadata = HashMap::new();
         metadata.insert("key".to_string(), "value".to_string());
 
@@ -990,7 +988,6 @@ mod tests {
 
     #[test]
     fn test_snapshot_summary_new() {
-        let session_id = Uuid::new_v4();
         let summary = SnapshotSummary {
             name: "test".to_string(),
             snapshot_type: SnapshotType::ContainerState,
@@ -1011,7 +1008,6 @@ mod tests {
 
     #[test]
     fn test_snapshot_summary_serialization() {
-        let session_id = Uuid::new_v4();
         let summary = SnapshotSummary {
             name: "test".to_string(),
             snapshot_type: SnapshotType::ContainerState,
@@ -1114,7 +1110,6 @@ mod tests {
 
     #[test]
     fn test_snapshot_debug() {
-        let session_id = Uuid::new_v4();
         let snapshot = Snapshot::new(
             "test".to_string(),
             "content".to_string(),
@@ -1130,7 +1125,6 @@ mod tests {
 
     #[test]
     fn test_snapshot_clone() {
-        let session_id = Uuid::new_v4();
         let snapshot1 = Snapshot::new(
             "test".to_string(),
             "content".to_string(),

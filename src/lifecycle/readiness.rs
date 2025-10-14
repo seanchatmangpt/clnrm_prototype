@@ -270,10 +270,9 @@ impl ReadinessTracker {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic, clippy::unwrap_or_default)]
     
-    // Allow unwrap/expect in tests as they are expected to panic on failure
-    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic, clippy::unwrap_or_default)]
+    use super::*;
 
     #[tokio::test]
     async fn test_readiness_tracker_creation() {

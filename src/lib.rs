@@ -2,6 +2,9 @@
 //!
 //! A comprehensive, hermetic testing framework for deterministic execution environments
 //! with advanced security policies, performance monitoring, and backend abstraction.
+
+// Allow common linting issues in test code
+#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic, clippy::bool_assert_comparison))]
 //!
 //! ## Overview
 //!

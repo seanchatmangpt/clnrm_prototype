@@ -255,6 +255,9 @@ pub fn scenario(name: impl Into<String>) -> Scenario {
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    // Allow unwrap/expect in tests as they are expected to panic on failure
+    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic)]
 
     #[test]
     fn test_scenario_creation() {
@@ -267,7 +270,7 @@ mod tests {
     fn test_scenario_step_addition() {
         let scenario = scenario("test").step("echo".to_string(), ["echo", "hello"]);
         assert_eq!(scenario.steps.len(), 1);
-        assert_eq!(scenario.steps[0].name, "echo");
+        assert_eq!(scenario.steps.first().unwrap().name, "echo");
     }
 
     #[test]

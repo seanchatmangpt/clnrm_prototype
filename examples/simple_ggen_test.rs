@@ -3,6 +3,9 @@
 //! This example demonstrates basic ggen CLI testing with minimal cleanroom dependencies
 //! to avoid compilation issues with the full framework.
 
+// Allow panic in examples as they are demonstration code
+#![allow(clippy::panic)]
+
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;

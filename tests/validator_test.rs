@@ -2,6 +2,9 @@
 //!
 //! These tests verify the validator script works correctly with the cleanroom project.
 
+// Allow panic in tests as they are expected to fail fast
+#![allow(clippy::panic)]
+
 use std::path::PathBuf;
 use std::process::Command;
 

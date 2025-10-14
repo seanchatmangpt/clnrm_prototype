@@ -413,6 +413,9 @@ impl RuntimeBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    // Allow panics and unwrap in tests as they are expected to fail fast
+    #[allow(clippy::panic, clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
 
     #[test]
     fn test_config_creation() {

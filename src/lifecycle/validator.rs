@@ -319,12 +319,12 @@ impl DeploymentValidator {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic)]
+    
     use super::*;
     use crate::cleanroom::CleanroomEnvironment;
-    
-    // Allow unwrap/expect in tests as they are expected to panic on failure
-    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic)]
     use crate::config::CleanroomConfig;
+    
 
     #[tokio::test]
     async fn test_validator_creation() {

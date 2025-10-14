@@ -327,11 +327,10 @@ pub struct DeterministicStateSummary {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic)]
+    
     use super::*;
     use std::time::Instant;
-    
-    // Allow unwrap/expect in tests as they are expected to panic on failure
-    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic)]
 
     #[tokio::test]
     async fn test_deterministic_manager_creation() {
