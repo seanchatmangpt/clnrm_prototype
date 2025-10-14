@@ -103,9 +103,7 @@ impl TestPolicyBuilder {
 
     /// Start with a preset policy
     pub fn with_preset(preset: fn() -> Policy) -> Self {
-        Self {
-            policy: preset(),
-        }
+        Self { policy: preset() }
     }
 
     /// Set the security level

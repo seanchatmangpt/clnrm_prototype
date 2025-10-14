@@ -39,9 +39,7 @@ use serde_json::json;
 use std::path::PathBuf;
 use uuid::Uuid;
 
-use clnrm::{
-    run_with_policy, CleanroomConfig, CleanroomEnvironment, Policy, RunResult,
-};
+use clnrm::{run_with_policy, CleanroomConfig, CleanroomEnvironment, Policy, RunResult};
 
 /// Cleanroom CLI - Deterministic testing with swarm coordination
 #[derive(Parser)]
@@ -484,7 +482,7 @@ async fn execute_swarm(cmd: SwarmCommand, output: OutputFormat) -> Result<()> {
 
             // Store swarm info via hooks
             if let Err(e) = std::process::Command::new("npx")
-                .args(&[
+                .args([
                     "claude-flow@alpha",
                     "hooks",
                     "post-edit",

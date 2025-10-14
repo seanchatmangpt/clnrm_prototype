@@ -3,7 +3,7 @@
 //! Provides mock implementations of container backends to enable
 //! test execution without Docker dependency.
 
-use clnrm::{GenericContainer, PostgresContainer, RedisContainer, ContainerWrapper};
+use clnrm::{ContainerWrapper, GenericContainer, PostgresContainer, RedisContainer};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -45,7 +45,7 @@ impl MockBackend {
     pub fn create_container(&self, name: &str, image: &str) -> Result<String, String> {
         let mut containers = self.containers.lock().unwrap();
         let mut next_id = self.next_id.lock().unwrap();
-        
+
         let container_id = format!("mock_{}", next_id);
         *next_id += 1;
 
@@ -127,7 +127,7 @@ impl MockGenericContainer {
         let backend = Arc::new(MockBackend::new());
         let full_image = format!("{}:{}", image, tag);
         let id = backend.create_container(name, &full_image).unwrap();
-        
+
         Self {
             backend,
             id,
@@ -149,22 +149,29 @@ impl MockGenericContainer {
 
 impl ContainerWrapper for MockGenericContainer {
     fn start(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.backend.start_container(&self.id)
-            .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)) as Box<dyn std::error::Error>)
+        self.backend.start_container(&self.id).map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+                as Box<dyn std::error::Error>
+        })
     }
 
     fn stop(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.backend.stop_container(&self.id)
-            .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)) as Box<dyn std::error::Error>)
+        self.backend.stop_container(&self.id).map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+                as Box<dyn std::error::Error>
+        })
     }
 
     fn remove(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.backend.remove_container(&self.id)
-            .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)) as Box<dyn std::error::Error>)
+        self.backend.remove_container(&self.id).map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+                as Box<dyn std::error::Error>
+        })
     }
 
     fn is_running(&self) -> bool {
-        self.backend.get_container_status(&self.id)
+        self.backend
+            .get_container_status(&self.id)
             .map(|status| status == ContainerStatus::Running)
             .unwrap_or(false)
     }
@@ -188,7 +195,7 @@ impl MockPostgresContainer {
         let name = format!("postgres_{}", db);
         let image = "postgres:15";
         let id = backend.create_container(&name, image).unwrap();
-        
+
         Self {
             backend,
             id,
@@ -208,22 +215,29 @@ impl MockPostgresContainer {
 
 impl ContainerWrapper for MockPostgresContainer {
     fn start(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.backend.start_container(&self.id)
-            .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)) as Box<dyn std::error::Error>)
+        self.backend.start_container(&self.id).map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+                as Box<dyn std::error::Error>
+        })
     }
 
     fn stop(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.backend.stop_container(&self.id)
-            .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)) as Box<dyn std::error::Error>)
+        self.backend.stop_container(&self.id).map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+                as Box<dyn std::error::Error>
+        })
     }
 
     fn remove(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.backend.remove_container(&self.id)
-            .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)) as Box<dyn std::error::Error>)
+        self.backend.remove_container(&self.id).map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+                as Box<dyn std::error::Error>
+        })
     }
 
     fn is_running(&self) -> bool {
-        self.backend.get_container_status(&self.id)
+        self.backend
+            .get_container_status(&self.id)
             .map(|status| status == ContainerStatus::Running)
             .unwrap_or(false)
     }
@@ -247,7 +261,7 @@ impl MockRedisContainer {
         let name = "redis_mock";
         let image = "redis:7";
         let id = backend.create_container(name, image).unwrap();
-        
+
         Self {
             backend,
             id,
@@ -267,22 +281,29 @@ impl MockRedisContainer {
 
 impl ContainerWrapper for MockRedisContainer {
     fn start(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.backend.start_container(&self.id)
-            .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)) as Box<dyn std::error::Error>)
+        self.backend.start_container(&self.id).map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+                as Box<dyn std::error::Error>
+        })
     }
 
     fn stop(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.backend.stop_container(&self.id)
-            .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)) as Box<dyn std::error::Error>)
+        self.backend.stop_container(&self.id).map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+                as Box<dyn std::error::Error>
+        })
     }
 
     fn remove(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.backend.remove_container(&self.id)
-            .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)) as Box<dyn std::error::Error>)
+        self.backend.remove_container(&self.id).map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+                as Box<dyn std::error::Error>
+        })
     }
 
     fn is_running(&self) -> bool {
-        self.backend.get_container_status(&self.id)
+        self.backend
+            .get_container_status(&self.id)
             .map(|status| status == ContainerStatus::Running)
             .unwrap_or(false)
     }
@@ -306,19 +327,28 @@ mod tests {
     #[test]
     fn test_mock_container_lifecycle() {
         let backend = MockBackend::new();
-        
+
         // Create container
         let id = backend.create_container("test", "alpine:latest").unwrap();
-        assert_eq!(backend.get_container_status(&id), Some(ContainerStatus::Created));
-        
+        assert_eq!(
+            backend.get_container_status(&id),
+            Some(ContainerStatus::Created)
+        );
+
         // Start container
         backend.start_container(&id).unwrap();
-        assert_eq!(backend.get_container_status(&id), Some(ContainerStatus::Running));
-        
+        assert_eq!(
+            backend.get_container_status(&id),
+            Some(ContainerStatus::Running)
+        );
+
         // Stop container
         backend.stop_container(&id).unwrap();
-        assert_eq!(backend.get_container_status(&id), Some(ContainerStatus::Stopped));
-        
+        assert_eq!(
+            backend.get_container_status(&id),
+            Some(ContainerStatus::Stopped)
+        );
+
         // Remove container
         backend.remove_container(&id).unwrap();
         assert_eq!(backend.get_container_status(&id), None);
@@ -329,10 +359,10 @@ mod tests {
         let container = MockGenericContainer::new("test", "alpine", "latest");
         assert_eq!(container.get_id().starts_with("mock_"), true);
         assert!(!container.is_running());
-        
+
         container.start().unwrap();
         assert!(container.is_running());
-        
+
         container.stop().unwrap();
         assert!(!container.is_running());
     }

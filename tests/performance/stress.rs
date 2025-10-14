@@ -3,8 +3,8 @@
 //! Tests that stress the system under high load to identify
 //! performance bottlenecks and stability issues.
 
+use crate::fixtures::{TestAssertions, TestEnvironments};
 use clnrm::{run, CleanroomEnvironment, Error as CleanroomError};
-use crate::fixtures::{TestEnvironments, TestAssertions};
 use std::time::{Duration, Instant};
 
 /// Test system under high concurrent load
@@ -19,9 +19,11 @@ async fn test_high_concurrent_load() -> Result<(), CleanroomError> {
     for i in 0..100 {
         let env_clone = environment.clone();
         let handle = tokio::spawn(async move {
-            env_clone.execute_test(&format!("stress_test_{}", i), || {
-                Ok::<String, CleanroomError>(format!("stress_result_{}", i))
-            }).await
+            env_clone
+                .execute_test(&format!("stress_test_{}", i), || {
+                    Ok::<String, CleanroomError>(format!("stress_result_{}", i))
+                })
+                .await
         });
         handles.push(handle);
     }
@@ -58,9 +60,11 @@ async fn test_sustained_load() -> Result<(), CleanroomError> {
             let env_clone = environment.clone();
             let test_id = batch * 20 + i;
             let handle = tokio::spawn(async move {
-                env_clone.execute_test(&format!("sustained_test_{}", test_id), || {
-                    Ok::<String, CleanroomError>(format!("sustained_result_{}", test_id))
-                }).await
+                env_clone
+                    .execute_test(&format!("sustained_test_{}", test_id), || {
+                        Ok::<String, CleanroomError>(format!("sustained_result_{}", test_id))
+                    })
+                    .await
             });
             handles.push(handle);
         }
@@ -89,10 +93,12 @@ async fn test_resource_exhaustion() -> Result<(), CleanroomError> {
 
     // Try to register many containers
     for i in 0..1000 {
-        let result = environment.register_container(
-            format!("exhaustion_container_{}", i),
-            format!("exhaustion_id_{}", i)
-        ).await;
+        let result = environment
+            .register_container(
+                format!("exhaustion_container_{}", i),
+                format!("exhaustion_id_{}", i),
+            )
+            .await;
 
         // Some may fail due to resource limits, which is expected
         if let Err(e) = result {
@@ -119,9 +125,11 @@ async fn test_stress_recovery() -> Result<(), CleanroomError> {
     for i in 0..50 {
         let env_clone = environment.clone();
         let handle = tokio::spawn(async move {
-            env_clone.execute_test(&format!("recovery_test_{}", i), || {
-                Ok::<String, CleanroomError>(format!("recovery_result_{}", i))
-            }).await
+            env_clone
+                .execute_test(&format!("recovery_test_{}", i), || {
+                    Ok::<String, CleanroomError>(format!("recovery_result_{}", i))
+                })
+                .await
         });
         handles.push(handle);
     }
@@ -134,9 +142,11 @@ async fn test_stress_recovery() -> Result<(), CleanroomError> {
 
     // System should still be responsive after stress
     let recovery_start = Instant::now();
-    let result = environment.execute_test("post_stress_test", || {
-        Ok::<String, CleanroomError>("post_stress_result".to_string())
-    }).await?;
+    let result = environment
+        .execute_test("post_stress_test", || {
+            Ok::<String, CleanroomError>("post_stress_result".to_string())
+        })
+        .await?;
 
     let recovery_duration = recovery_start.elapsed();
 
@@ -165,7 +175,7 @@ async fn test_docker_stress() -> Result<(), CleanroomError> {
     // Execute many Docker commands rapidly
     for i in 0..50 {
         let result = run(["echo", &format!("docker stress test {}", i)])?;
-        TestAssertions::assert_success(&result);
+        TestAssertions::assert_success(&Ok(result));
     }
 
     let duration = start_time.elapsed();

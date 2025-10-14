@@ -3,10 +3,7 @@
 //! Tests for core container functionality including container lifecycle,
 //! management, and basic container operations.
 
-use clnrm::{
-    CleanroomConfig, CleanroomEnvironment,
-    Error as CleanroomError,
-};
+use clnrm::{CleanroomConfig, CleanroomEnvironment, Error as CleanroomError};
 use std::time::Duration;
 
 /// Test container lifecycle management
@@ -16,7 +13,9 @@ async fn test_container_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
     let mut environment = CleanroomEnvironment::new(config).await?;
 
     // Test container registration
-    environment.register_container("test1".to_string(), "container_id_123".to_string()).await?;
+    environment
+        .register_container("test1".to_string(), "container_id_123".to_string())
+        .await?;
     assert!(environment.is_container_registered("test1").await);
 
     // Test container access

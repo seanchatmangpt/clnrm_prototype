@@ -4,7 +4,7 @@
 //! repetitive construction patterns across container implementations.
 
 use crate::cleanroom::ContainerMetrics;
-use crate::conditional_sleep;
+// conditional_sleep is used via crate::test_utils::mock_time::conditional_sleep
 use std::time::Instant;
 
 /// Builder for ContainerMetrics
@@ -146,7 +146,7 @@ mod tests {
     #[tokio::test]
     async fn test_metrics_builder() {
         let start_time = Instant::now();
-        conditional_sleep(std::time::Duration::from_millis(10)).await;
+        crate::test_utils::mock_time::conditional_sleep(std::time::Duration::from_millis(10)).await;
 
         let metrics = ContainerMetricsBuilder::new()
             .cpu_usage(5.0)

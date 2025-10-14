@@ -46,10 +46,10 @@ impl MockTimeUtils {
             if condition().await {
                 return Ok(true);
             }
-            
+
             // Use conditional sleep for faster tests
             conditional_sleep(Duration::from_millis(1)).await;
-            
+
             // If mock time is provided, advance it
             if let Some(mock) = mock_time {
                 mock.advance(Duration::from_millis(1));
@@ -67,7 +67,8 @@ impl MockTimeUtils {
         F: Fn() -> Fut,
         Fut: std::future::Future<Output = Result<T, Box<dyn std::error::Error>>>,
     {
-        conditional_timeout(timeout_duration, test()).await
+        conditional_timeout(timeout_duration, test())
+            .await
             .map_err(|_| "Mock timeout".into())
     }
 
@@ -112,9 +113,7 @@ impl MockTimeUtils {
     }
 
     /// Create a test that runs with mock time
-    pub async fn run_with_mock_time<F, Fut, T>(
-        test: F,
-    ) -> T
+    pub async fn run_with_mock_time<F, Fut, T>(test: F) -> T
     where
         F: FnOnce(&MockTime) -> Fut,
         Fut: std::future::Future<Output = T>,
@@ -162,7 +161,11 @@ impl MockTimeTestContext {
     }
 
     /// Create a mock timeout
-    pub fn timeout<F>(&self, duration: Duration, future: F) -> impl std::future::Future<Output = Result<F::Output, tokio::time::error::Elapsed>>
+    pub fn timeout<F>(
+        &self,
+        duration: Duration,
+        future: F,
+    ) -> impl std::future::Future<Output = Result<F::Output, tokio::time::error::Elapsed>>
     where
         F: std::future::Future,
     {
@@ -184,12 +187,12 @@ mod tests {
     async fn test_mock_time_fixtures() {
         let env = MockTimeFixtures::new_test_env();
         let mock_time = MockTimeFixtures::new_mock_time();
-        
+
         // Test basic functionality
         let start = mock_time.now();
         mock_time.advance(Duration::from_secs(5));
         let after_advance = mock_time.now();
-        
+
         assert_eq!(after_advance.duration_since(start), Duration::from_secs(5));
     }
 
@@ -203,8 +206,9 @@ mod tests {
             },
             Duration::from_secs(1),
             None,
-        ).await;
-        
+        )
+        .await;
+
         assert!(result.is_ok());
         assert!(result.unwrap());
         assert_eq!(counter, 3);
@@ -218,8 +222,9 @@ mod tests {
                 Ok::<i32, Box<dyn std::error::Error>>(42)
             },
             Duration::from_secs(1),
-        ).await;
-        
+        )
+        .await;
+
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 42);
     }
@@ -232,8 +237,9 @@ mod tests {
                 42
             },
             None,
-        ).await;
-        
+        )
+        .await;
+
         assert_eq!(result, 42);
         // Duration should be very small due to conditional sleep
         assert!(duration < Duration::from_millis(100));
@@ -243,15 +249,14 @@ mod tests {
     async fn test_mock_time_utils_advance_and_execute() {
         let mock_time = MockTime::new();
         let start = mock_time.now();
-        
+
         let result = MockTimeUtils::advance_and_execute(
             &mock_time,
             Duration::from_secs(10),
-            |mock| async move {
-                mock.now().duration_since(start)
-            }
-        ).await;
-        
+            |mock| async move { mock.now().duration_since(start) },
+        )
+        .await;
+
         assert_eq!(result, Duration::from_secs(10));
     }
 
@@ -261,8 +266,9 @@ mod tests {
             let start = mock_time.now();
             mock_time.advance(Duration::from_secs(5));
             mock_time.now().duration_since(start)
-        }).await;
-        
+        })
+        .await;
+
         assert_eq!(result, Duration::from_secs(5));
     }
 
@@ -270,16 +276,16 @@ mod tests {
     async fn test_mock_time_test_context() {
         let context = MockTimeTestContext::new();
         let start_elapsed = context.elapsed();
-        
+
         context.advance(Duration::from_secs(5));
         let after_advance = context.elapsed();
-        
+
         assert_eq!(after_advance, Duration::from_secs(5));
-        
+
         // Test sleep
         context.sleep(Duration::from_secs(3)).await;
         let after_sleep = context.elapsed();
-        
+
         assert_eq!(after_sleep, Duration::from_secs(8));
     }
 }

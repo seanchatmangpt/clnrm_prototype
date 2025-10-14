@@ -38,7 +38,10 @@ impl TestAssertions {
         E: std::fmt::Display,
     {
         match result {
-            Ok(value) => panic!("Expected error with message '{}', got success: {:?}", expected_message, value),
+            Ok(value) => panic!(
+                "Expected error with message '{}', got success: {:?}",
+                expected_message, value
+            ),
             Err(error) => {
                 let error_message = error.to_string();
                 assert!(
@@ -103,7 +106,9 @@ impl TestAssertions {
         assert!(
             duration >= min && duration <= max,
             "Duration {:?} is not in range [{:?}, {:?}]",
-            duration, min, max
+            duration,
+            min,
+            max
         );
     }
 
@@ -112,7 +117,8 @@ impl TestAssertions {
         assert!(
             duration < max,
             "Duration {:?} is not less than {:?}",
-            duration, max
+            duration,
+            max
         );
     }
 
@@ -121,7 +127,8 @@ impl TestAssertions {
         assert!(
             duration > min,
             "Duration {:?} is not greater than {:?}",
-            duration, min
+            duration,
+            min
         );
     }
 
@@ -130,7 +137,9 @@ impl TestAssertions {
         assert!(
             (a - b).abs() < epsilon,
             "{} is not approximately equal to {} (epsilon: {})",
-            a, b, epsilon
+            a,
+            b,
+            epsilon
         );
     }
 
@@ -139,7 +148,8 @@ impl TestAssertions {
         assert!(
             haystack.contains(needle),
             "String '{}' does not contain '{}'",
-            haystack, needle
+            haystack,
+            needle
         );
     }
 
@@ -148,16 +158,19 @@ impl TestAssertions {
         assert!(
             vec.contains(expected),
             "Vector {:?} does not contain {:?}",
-            vec, expected
+            vec,
+            expected
         );
     }
 
     /// Assert that a vector has expected length
     pub fn assert_vec_length<T>(vec: &[T], expected_length: usize) {
         assert_eq!(
-            vec.len(), expected_length,
+            vec.len(),
+            expected_length,
             "Expected vector length {}, got {}",
-            expected_length, vec.len()
+            expected_length,
+            vec.len()
         );
     }
 
@@ -174,7 +187,10 @@ impl TestAssertions {
     }
 
     /// Assert that a HashMap contains expected key-value pair
-    pub fn assert_map_contains<K: std::hash::Hash + std::cmp::Eq, V: PartialEq + std::fmt::Debug>(
+    pub fn assert_map_contains<
+        K: std::hash::Hash + std::cmp::Eq,
+        V: PartialEq + std::fmt::Debug,
+    >(
         map: &std::collections::HashMap<K, V>,
         key: &K,
         value: &V,
@@ -197,14 +213,14 @@ macro_rules! assert_fast_completion {
         let start = std::time::Instant::now();
         let result = $test;
         let duration = start.elapsed();
-        
+
         // In test mode, operations should complete quickly due to mocking
         assert!(
             duration < std::time::Duration::from_millis(100),
             "Test took too long: {:?}",
             duration
         );
-        
+
         result
     }};
 }
@@ -216,13 +232,14 @@ macro_rules! assert_completion_within {
         let start = std::time::Instant::now();
         let result = $test;
         let duration = start.elapsed();
-        
+
         assert!(
             duration < $max_duration,
             "Test took too long: {:?}, expected less than {:?}",
-            duration, $max_duration
+            duration,
+            $max_duration
         );
-        
+
         result
     }};
 }
@@ -278,7 +295,7 @@ mod tests {
         TestAssertions::assert_duration_in_range(
             duration,
             Duration::from_millis(40),
-            Duration::from_millis(60)
+            Duration::from_millis(60),
         );
     }
 
@@ -289,7 +306,7 @@ mod tests {
         TestAssertions::assert_duration_in_range(
             duration,
             Duration::from_millis(40),
-            Duration::from_millis(60)
+            Duration::from_millis(60),
         );
     }
 
@@ -346,7 +363,7 @@ mod tests {
         let mut map = std::collections::HashMap::new();
         map.insert("key1", "value1");
         map.insert("key2", "value2");
-        
+
         TestAssertions::assert_map_contains_key(&map, &"key1");
     }
 
@@ -355,7 +372,7 @@ mod tests {
     fn test_assert_map_contains_key_panics_on_missing() {
         let mut map = std::collections::HashMap::new();
         map.insert("key1", "value1");
-        
+
         TestAssertions::assert_map_contains_key(&map, &"missing");
     }
 
@@ -364,7 +381,7 @@ mod tests {
         let mut map = std::collections::HashMap::new();
         map.insert("key1", "value1");
         map.insert("key2", "value2");
-        
+
         TestAssertions::assert_map_contains(&map, &"key1", &"value1");
     }
 
@@ -373,7 +390,7 @@ mod tests {
     fn test_assert_map_contains_panics_on_missing_key() {
         let mut map = std::collections::HashMap::new();
         map.insert("key1", "value1");
-        
+
         TestAssertions::assert_map_contains(&map, &"missing", &"value");
     }
 
@@ -382,7 +399,7 @@ mod tests {
     fn test_assert_map_contains_panics_on_wrong_value() {
         let mut map = std::collections::HashMap::new();
         map.insert("key1", "value1");
-        
+
         TestAssertions::assert_map_contains(&map, &"key1", &"wrong_value");
     }
 }

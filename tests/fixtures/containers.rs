@@ -34,14 +34,12 @@ impl TestContainers {
 
     /// Create a test Alpine container
     pub fn alpine() -> GenericContainer {
-        GenericContainer::new("alpine:latest")
-            .with_env("TEST_ENV", "test_value")
+        GenericContainer::new("alpine:latest").with_env("TEST_ENV", "test_value")
     }
 
     /// Create a test Ubuntu container
     pub fn ubuntu() -> GenericContainer {
-        GenericContainer::new("ubuntu:latest")
-            .with_env("DEBIAN_FRONTEND", "noninteractive")
+        GenericContainer::new("ubuntu:latest").with_env("DEBIAN_FRONTEND", "noninteractive")
     }
 }
 
@@ -90,7 +88,8 @@ impl TestContainerBuilder {
 
     /// Add a volume mapping
     pub fn with_volume(mut self, host_path: &str, container_path: &str) -> Self {
-        self.volumes.insert(host_path.to_string(), container_path.to_string());
+        self.volumes
+            .insert(host_path.to_string(), container_path.to_string());
         self
     }
 
@@ -103,18 +102,18 @@ impl TestContainerBuilder {
     /// Build a generic container
     pub fn build_generic(self) -> GenericContainer {
         let mut container = GenericContainer::new(&self.image);
-        
+
         for port in self.ports {
             container = container.with_port(port);
         }
-        
+
         for (key, value) in self.env_vars {
             container = container.with_env(&key, &value);
         }
-        
+
         // Note: Volume mapping would need to be implemented in GenericContainer
         // For now, we'll just return the container with ports and env vars
-        
+
         container
     }
 
@@ -122,15 +121,15 @@ impl TestContainerBuilder {
     pub fn build_postgres(self) -> Option<PostgresContainer> {
         if self.image.starts_with("postgres") {
             let mut container = PostgresContainer::new(&self.image);
-            
+
             for port in self.ports {
                 container = container.with_port(port);
             }
-            
+
             for (key, value) in self.env_vars {
                 container = container.with_env(&key, &value);
             }
-            
+
             Some(container)
         } else {
             None
@@ -141,15 +140,15 @@ impl TestContainerBuilder {
     pub fn build_redis(self) -> Option<RedisContainer> {
         if self.image.starts_with("redis") {
             let mut container = RedisContainer::new(&self.image);
-            
+
             for port in self.ports {
                 container = container.with_port(port);
             }
-            
+
             for (key, value) in self.env_vars {
                 container = container.with_env(&key, &value);
             }
-            
+
             Some(container)
         } else {
             None

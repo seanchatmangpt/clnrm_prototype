@@ -131,9 +131,11 @@ async fn benchmark_singleton_containers() -> Result<(Duration, Duration), Box<dy
     println!("  Testing singleton container pattern for 10-50x performance improvement...");
 
     // Create cleanroom environment with singleton containers enabled
-    let mut config = CleanroomConfig::default();
-    config.enable_singleton_containers = true;
-    config.container_startup_timeout = Duration::from_secs(60); // Allow time for container startup
+    let config = CleanroomConfig {
+        enable_singleton_containers: true,
+        container_startup_timeout: Duration::from_secs(60), // Allow time for container startup
+        ..CleanroomConfig::default()
+    };
 
     let environment: CleanroomEnvironment = CleanroomEnvironment::new(config).await?;
     let environment_arc = Arc::new(environment);

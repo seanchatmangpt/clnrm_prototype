@@ -4,8 +4,8 @@
 //! ResourceLimits, and related configuration management.
 
 use clnrm::{
-    CleanroomConfig, CleanroomEnvironment, DeterministicManager,
-    Error as CleanroomError, Policy, ResourceLimits, SecurityLevel, TestReport,
+    CleanroomConfig, CleanroomEnvironment, DeterministicManager, Error as CleanroomError, Policy,
+    ResourceLimits, SecurityLevel, TestReport,
 };
 use std::time::Duration;
 use uuid::Uuid;

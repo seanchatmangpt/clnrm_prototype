@@ -3,8 +3,8 @@
 //! Tests for performance characteristics and behavior under load
 //! in integration scenarios.
 
+use crate::fixtures::{TestAssertions, TestEnvironments};
 use clnrm::{run, CleanroomEnvironment, Error as CleanroomError};
-use crate::fixtures::{TestEnvironments, TestAssertions};
 use std::time::{Duration, Instant};
 
 /// Test performance under concurrent load
@@ -19,9 +19,11 @@ async fn test_concurrent_performance() -> Result<(), CleanroomError> {
     for i in 0..10 {
         let env_clone = environment.clone();
         let handle = tokio::spawn(async move {
-            env_clone.execute_test(&format!("concurrent_test_{}", i), || {
-                Ok::<String, CleanroomError>(format!("result_{}", i))
-            }).await
+            env_clone
+                .execute_test(&format!("concurrent_test_{}", i), || {
+                    Ok::<String, CleanroomError>(format!("result_{}", i))
+                })
+                .await
         });
         handles.push(handle);
     }
@@ -56,11 +58,13 @@ async fn test_memory_usage_performance() -> Result<(), CleanroomError> {
 
     // Execute memory-intensive operations
     for i in 0..100 {
-        let result = environment.execute_test(&format!("memory_test_{}", i), || {
-            // Simulate memory allocation
-            let _data = vec![0u8; 1024]; // 1KB per test
-            Ok::<String, CleanroomError>(format!("memory_test_{}", i))
-        }).await?;
+        let result = environment
+            .execute_test(&format!("memory_test_{}", i), || {
+                // Simulate memory allocation
+                let _data = vec![0u8; 1024]; // 1KB per test
+                Ok::<String, CleanroomError>(format!("memory_test_{}", i))
+            })
+            .await?;
 
         assert_eq!(result, format!("memory_test_{}", i));
     }
@@ -82,9 +86,11 @@ async fn test_large_test_suite_performance() -> Result<(), CleanroomError> {
 
     // Execute a large number of tests
     for i in 0..50 {
-        let result = environment.execute_test(&format!("suite_test_{}", i), || {
-            Ok::<String, CleanroomError>(format!("suite_result_{}", i))
-        }).await?;
+        let result = environment
+            .execute_test(&format!("suite_test_{}", i), || {
+                Ok::<String, CleanroomError>(format!("suite_result_{}", i))
+            })
+            .await?;
 
         assert_eq!(result, format!("suite_result_{}", i));
     }
@@ -115,8 +121,8 @@ async fn test_docker_command_performance() -> Result<(), CleanroomError> {
     // Execute multiple Docker commands
     for i in 0..20 {
         let result = run(["echo", &format!("docker command {}", i)])?;
-        TestAssertions::assert_success(&result);
-        let run_result = result.unwrap();
+        TestAssertions::assert_success(&Ok(result));
+        let run_result = result;
         TestAssertions::assert_run_success(&run_result);
         TestAssertions::assert_stdout_contains(&run_result, &format!("docker command {}", i));
     }

@@ -2,7 +2,7 @@
 //!
 //! Provides standardized test configurations for different testing scenarios.
 
-use clnrm::{CleanroomConfig, SecurityLevel};
+use clnrm::{CleanroomConfig, SecurityLevel, SecurityPolicy, ResourceLimits};
 use std::time::Duration;
 
 /// Test configuration presets for different scenarios
@@ -17,11 +17,14 @@ impl TestConfigs {
             test_execution_timeout: Duration::from_micros(500),
             max_concurrent_containers: 1,
             enable_deterministic_execution: false,
+            deterministic_seed: None,
             enable_coverage_tracking: false,
             enable_snapshot_testing: false,
             enable_tracing: false,
-            security_policy: SecurityLevel::Permissive,
-            ..CleanroomConfig::default()
+            resource_limits: ResourceLimits::default(),
+            security_policy: SecurityPolicy::with_security_level(SecurityLevel::Low),
+            performance_monitoring: clnrm::config::PerformanceMonitoringConfig::default(),
+            container_customizers: std::collections::HashMap::new(),
         }
     }
 
@@ -33,11 +36,14 @@ impl TestConfigs {
             test_execution_timeout: Duration::from_millis(50),
             max_concurrent_containers: 2,
             enable_deterministic_execution: false,
+            deterministic_seed: None,
             enable_coverage_tracking: false,
             enable_snapshot_testing: false,
             enable_tracing: false,
-            security_policy: SecurityLevel::Standard,
-            ..CleanroomConfig::default()
+            resource_limits: ResourceLimits::default(),
+            security_policy: SecurityPolicy::with_security_level(SecurityLevel::Medium),
+            performance_monitoring: clnrm::config::PerformanceMonitoringConfig::default(),
+            container_customizers: std::collections::HashMap::new(),
         }
     }
 
@@ -49,11 +55,14 @@ impl TestConfigs {
             test_execution_timeout: Duration::from_micros(10),
             max_concurrent_containers: 1,
             enable_deterministic_execution: true,
+            deterministic_seed: Some(42),
             enable_coverage_tracking: false,
             enable_snapshot_testing: false,
             enable_tracing: false,
-            security_policy: SecurityLevel::Permissive,
-            ..CleanroomConfig::default()
+            resource_limits: ResourceLimits::default(),
+            security_policy: SecurityPolicy::with_security_level(SecurityLevel::Low),
+            performance_monitoring: clnrm::config::PerformanceMonitoringConfig::default(),
+            container_customizers: std::collections::HashMap::new(),
         }
     }
 
@@ -65,11 +74,14 @@ impl TestConfigs {
             test_execution_timeout: Duration::from_millis(10),
             max_concurrent_containers: 5,
             enable_deterministic_execution: false,
+            deterministic_seed: None,
             enable_coverage_tracking: false,
             enable_snapshot_testing: false,
             enable_tracing: false,
-            security_policy: SecurityLevel::Standard,
-            ..CleanroomConfig::default()
+            resource_limits: ResourceLimits::default(),
+            security_policy: SecurityPolicy::with_security_level(SecurityLevel::Medium),
+            performance_monitoring: clnrm::config::PerformanceMonitoringConfig::default(),
+            container_customizers: std::collections::HashMap::new(),
         }
     }
 
@@ -81,11 +93,33 @@ impl TestConfigs {
             test_execution_timeout: Duration::from_millis(25),
             max_concurrent_containers: 10,
             enable_deterministic_execution: false,
+            deterministic_seed: None,
             enable_coverage_tracking: false,
             enable_snapshot_testing: false,
             enable_tracing: false,
-            security_policy: SecurityLevel::Standard,
-            ..CleanroomConfig::default()
+            resource_limits: ResourceLimits::default(),
+            security_policy: SecurityPolicy::with_security_level(SecurityLevel::Medium),
+            performance_monitoring: clnrm::config::PerformanceMonitoringConfig::default(),
+            container_customizers: std::collections::HashMap::new(),
+        }
+    }
+
+    /// Stress test configuration for high-load scenarios
+    pub fn stress_test() -> CleanroomConfig {
+        CleanroomConfig {
+            enable_singleton_containers: true,
+            container_startup_timeout: Duration::from_millis(1),
+            test_execution_timeout: Duration::from_millis(10),
+            max_concurrent_containers: 100,
+            enable_deterministic_execution: false,
+            deterministic_seed: None,
+            enable_coverage_tracking: false,
+            enable_snapshot_testing: false,
+            enable_tracing: false,
+            resource_limits: ResourceLimits::default(),
+            security_policy: SecurityPolicy::with_security_level(SecurityLevel::Medium),
+            performance_monitoring: clnrm::config::PerformanceMonitoringConfig::default(),
+            container_customizers: std::collections::HashMap::new(),
         }
     }
 
@@ -97,11 +131,14 @@ impl TestConfigs {
             test_execution_timeout: Duration::from_secs(10),
             max_concurrent_containers: 5,
             enable_deterministic_execution: true,
+            deterministic_seed: Some(42),
             enable_coverage_tracking: true,
             enable_snapshot_testing: true,
             enable_tracing: true,
-            security_policy: SecurityLevel::Strict,
-            ..CleanroomConfig::default()
+            resource_limits: ResourceLimits::default(),
+            security_policy: SecurityPolicy::with_security_level(SecurityLevel::High),
+            performance_monitoring: clnrm::config::PerformanceMonitoringConfig::default(),
+            container_customizers: std::collections::HashMap::new(),
         }
     }
 
@@ -113,11 +150,14 @@ impl TestConfigs {
             test_execution_timeout: Duration::from_secs(5),
             max_concurrent_containers: 3,
             enable_deterministic_execution: true,
+            deterministic_seed: Some(42),
             enable_coverage_tracking: false,
             enable_snapshot_testing: false,
             enable_tracing: true,
-            security_policy: SecurityLevel::Locked,
-            ..CleanroomConfig::default()
+            resource_limits: ResourceLimits::default(),
+            security_policy: SecurityPolicy::with_security_level(SecurityLevel::High),
+            performance_monitoring: clnrm::config::PerformanceMonitoringConfig::default(),
+            container_customizers: std::collections::HashMap::new(),
         }
     }
 }
@@ -137,9 +177,7 @@ impl TestConfigBuilder {
 
     /// Start with a preset configuration
     pub fn with_preset(preset: fn() -> CleanroomConfig) -> Self {
-        Self {
-            config: preset(),
-        }
+        Self { config: preset() }
     }
 
     /// Set container startup timeout
@@ -215,18 +253,36 @@ mod tests {
     #[test]
     fn test_config_presets() {
         let unit_config = TestConfigs::unit_test();
-        assert_eq!(unit_config.container_startup_timeout, Duration::from_micros(100));
-        assert_eq!(unit_config.test_execution_timeout, Duration::from_micros(500));
+        assert_eq!(
+            unit_config.container_startup_timeout,
+            Duration::from_micros(100)
+        );
+        assert_eq!(
+            unit_config.test_execution_timeout,
+            Duration::from_micros(500)
+        );
         assert_eq!(unit_config.max_concurrent_containers, 1);
 
         let integration_config = TestConfigs::integration_test();
-        assert_eq!(integration_config.container_startup_timeout, Duration::from_millis(10));
-        assert_eq!(integration_config.test_execution_timeout, Duration::from_millis(50));
+        assert_eq!(
+            integration_config.container_startup_timeout,
+            Duration::from_millis(10)
+        );
+        assert_eq!(
+            integration_config.test_execution_timeout,
+            Duration::from_millis(50)
+        );
         assert_eq!(integration_config.max_concurrent_containers, 2);
 
         let mock_config = TestConfigs::mock_test();
-        assert_eq!(mock_config.container_startup_timeout, Duration::from_micros(1));
-        assert_eq!(mock_config.test_execution_timeout, Duration::from_micros(10));
+        assert_eq!(
+            mock_config.container_startup_timeout,
+            Duration::from_micros(1)
+        );
+        assert_eq!(
+            mock_config.test_execution_timeout,
+            Duration::from_micros(10)
+        );
         assert!(mock_config.enable_deterministic_execution);
     }
 

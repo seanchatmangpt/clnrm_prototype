@@ -2,11 +2,11 @@
 //!
 //! Provides standardized test environment creation and management.
 
+use crate::fixtures::config::TestConfigs;
 use clnrm::{CleanroomConfig, CleanroomEnvironment, Error as CleanroomError};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::timeout;
-use crate::fixtures::config::TestConfigs;
 
 /// Test environment fixtures
 pub struct TestEnvironments;
@@ -47,6 +47,13 @@ impl TestEnvironments {
         Ok(Arc::new(environment))
     }
 
+    /// Create a stress test environment
+    pub async fn stress_test() -> Result<Arc<CleanroomEnvironment>, CleanroomError> {
+        let config = TestConfigs::stress_test();
+        let environment = CleanroomEnvironment::new(config).await?;
+        Ok(Arc::new(environment))
+    }
+
     /// Create a comprehensive test environment
     pub async fn comprehensive_test() -> Result<Arc<CleanroomEnvironment>, CleanroomError> {
         let config = TestConfigs::comprehensive_test();
@@ -77,9 +84,7 @@ impl TestEnvironmentBuilder {
 
     /// Start with a preset configuration
     pub fn with_preset(preset: fn() -> CleanroomConfig) -> Self {
-        Self {
-            config: preset(),
-        }
+        Self { config: preset() }
     }
 
     /// Set the configuration directly
@@ -144,14 +149,16 @@ impl TestEnvironmentBuilder {
 
     /// Build the test environment with timeout
     pub async fn build_with_timeout(
-        self, 
-        timeout_duration: Duration
+        self,
+        timeout_duration: Duration,
     ) -> Result<Arc<CleanroomEnvironment>, CleanroomError> {
         let result = timeout(timeout_duration, self.build()).await;
         match result {
             Ok(Ok(environment)) => Ok(environment),
             Ok(Err(e)) => Err(e),
-            Err(_) => Err(CleanroomError::validation_error("Environment creation timeout")),
+            Err(_) => Err(CleanroomError::validation_error(
+                "Environment creation timeout",
+            )),
         }
     }
 }
@@ -231,8 +238,14 @@ mod tests {
 
         assert!(environment.is_ok());
         let env = environment.unwrap();
-        assert_eq!(env.config().container_startup_timeout, Duration::from_millis(100));
-        assert_eq!(env.config().test_execution_timeout, Duration::from_millis(200));
+        assert_eq!(
+            env.config().container_startup_timeout,
+            Duration::from_millis(100)
+        );
+        assert_eq!(
+            env.config().test_execution_timeout,
+            Duration::from_millis(200)
+        );
         assert_eq!(env.config().max_concurrent_containers, 5);
     }
 
@@ -245,7 +258,10 @@ mod tests {
 
         assert!(environment.is_ok());
         let env = environment.unwrap();
-        assert_eq!(env.config().container_startup_timeout, Duration::from_micros(100));
+        assert_eq!(
+            env.config().container_startup_timeout,
+            Duration::from_micros(100)
+        );
         assert_eq!(env.config().max_concurrent_containers, 3);
     }
 
@@ -256,6 +272,9 @@ mod tests {
 
         let guard = guard.unwrap();
         assert!(!guard.session_id().is_nil());
-        assert_eq!(guard.config().container_startup_timeout, Duration::from_micros(100));
+        assert_eq!(
+            guard.config().container_startup_timeout,
+            Duration::from_micros(100)
+        );
     }
 }
