@@ -1,21 +1,20 @@
-//! Examples demonstrating the type-safe builder pattern
+//! Examples demonstrating different cleanroom environment configurations
 //!
-//! This example shows how to use the CleanroomBuilder with compile-time
-//! validation to create different types of cleanroom environments.
+//! This example shows how to create different types of cleanroom environments
+//! with various configurations for different use cases.
 
-use clnrm::CleanroomConfig;
-use clnrm::ResourceLimits;
-use clnrm::SecurityLevel;
+use clnrm::{CleanroomConfig, CleanroomEnvironment, Policy, SecurityLevel};
 use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Cleanroom Builder Pattern Examples");
-    println!("==================================");
+    println!("Cleanroom Configuration Examples");
+    println!("=================================");
 
     // Example 1: Minimal configuration
     println!("\n1. Minimal Configuration");
-    let env = CleanroomBuilder::new().build_minimal().await?;
+    let config = CleanroomConfig::default();
+    let env = CleanroomEnvironment::new(config).await?;
     println!(
         "✓ Built minimal environment with session ID: {}",
         env.session_id()
@@ -23,80 +22,57 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 2: Secure environment
     println!("\n2. Secure Environment");
-    let env = CleanroomBuilder::secure()
-        .with_coverage_tracking(true)
-        .with_tracing(true)
-        .build()
-        .await?;
+    let mut config = CleanroomConfig::default();
+    config.policy = Policy::locked();
+    let env = CleanroomEnvironment::new(config).await?;
     println!("✓ Built secure environment with locked security policy");
 
     // Example 3: Performance-optimized environment
     println!("\n3. Performance Environment");
-    let env = CleanroomBuilder::performance()
-        .with_coverage_tracking(false) // Disable for performance
-        .build()
-        .await?;
+    let mut config = CleanroomConfig::default();
+    config.test_execution_timeout = Duration::from_secs(60);
+    let env = CleanroomEnvironment::new(config).await?;
     println!("✓ Built performance environment with 60s timeout");
 
     // Example 4: Deterministic environment
     println!("\n4. Deterministic Environment");
-    let seed = 42;
-    let env = CleanroomBuilder::deterministic(seed)
-        .with_snapshot_testing(true)
-        .build()
-        .await?;
-    println!("✓ Built deterministic environment with seed: {}", seed);
+    let mut config = CleanroomConfig::default();
+    config.policy = Policy::with_security_level(SecurityLevel::High);
+    let env = CleanroomEnvironment::new(config).await?;
+    println!("✓ Built deterministic environment with high security");
 
     // Example 5: Development environment
     println!("\n5. Development Environment");
-    let env = CleanroomBuilder::development()
-        .with_max_concurrent_containers(5)
-        .build()
-        .await?;
+    let mut config = CleanroomConfig::default();
+    config.policy = Policy::low_security();
+    let env = CleanroomEnvironment::new(config).await?;
     println!("✓ Built development environment with relaxed policies");
 
-    // Example 6: Custom configuration with typestate
+    // Example 6: Custom configuration
     println!("\n6. Custom Configuration");
-    let custom_limits = ResourceLimits {
-        max_cpu_usage_percent: 80.0,
-        max_memory_usage_bytes: 1024 * 1024 * 1024, // 1GB
-        max_disk_usage_bytes: 10 * 1024 * 1024 * 1024, // 10GB
-        max_network_bandwidth_bytes_per_sec: 100 * 1024 * 1024, // 100MB/s
-        max_container_count: 10,
-        max_test_execution_time: Duration::from_secs(300),
-        enable_resource_monitoring: true,
-        resource_cleanup_timeout: Duration::from_secs(30),
-    };
-
-    let env = CleanroomBuilder::new()
-        .with_timeout(Duration::from_secs(120))
-        .with_security_policy(SecurityPolicy::locked())
-        .with_resource_limits(custom_limits)
-        .with_deterministic_execution(Some(123))
-        .with_coverage_tracking(true)
-        .with_snapshot_testing(true)
-        .with_tracing(true)
-        .build()
-        .await?;
-    println!("✓ Built custom environment with all features enabled");
+    let mut config = CleanroomConfig::default();
+    config.test_execution_timeout = Duration::from_secs(120);
+    config.policy = Policy::with_resource_limits(80.0, 1024 * 1024 * 1024, 10 * 1024 * 1024 * 1024);
+    let env = CleanroomEnvironment::new(config).await?;
+    println!("✓ Built custom environment with resource limits");
 
     // Example 7: Configuration inspection
     println!("\n7. Configuration Inspection");
-    let builder = CleanroomBuilder::secure().with_coverage_tracking(true);
+    let config = CleanroomConfig::default();
+    let env = CleanroomEnvironment::new(config).await?;
 
-    let config = builder.config();
     println!(
         "Security level: {:?}",
-        config.security_policy.security_level
+        env.config().policy.security.security_level
     );
-    println!("Coverage tracking: {}", config.enable_coverage_tracking);
     println!(
-        "Singleton containers: {}",
-        config.enable_singleton_containers
+        "Test timeout: {:?}",
+        env.config().test_execution_timeout
     );
-
-    let env = builder.build().await?;
-    println!("✓ Built environment after inspection");
+    println!(
+        "Session ID: {}",
+        env.session_id()
+    );
 
     println!("\n=== All Examples Completed Successfully ===");
     Ok(())

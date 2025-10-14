@@ -12,7 +12,7 @@ use clnrm::{
     backend::AutoBackend,
     determinism::DeterministicManager,
     error::Result,
-    policy::Policy,
+    policy::{Policy, SecurityLevel},
     scenario::{scenario, RunResult},
 };
 use std::time::Instant;
@@ -98,9 +98,7 @@ struct PocRunResult {
 impl PocRunResult {
     /// Create from cleanroom RunResult
     fn from_cleanroom_result(
-        cleanroom_result: RunResult,
-        backend: &str,
-        duration_ms: u128,
+        cleanroom_result: RunResult, backend: &str, duration_ms: u128,
     ) -> Self {
         Self {
             backend: backend.to_string(),
@@ -282,25 +280,25 @@ fn demo_policy() -> Result<()> {
     // Create secure policy
     let policy = Policy::locked();
     println!(
-        "Policy is secure by default: {}",
-        policy.is_secure_by_default()
+        "Policy security level: {:?}",
+        policy.security.security_level
     );
     println!(
-        "Network disabled by default: {}",
-        policy.network_disabled_by_default()
+        "Network isolation enabled: {}",
+        policy.security.enable_network_isolation
     );
-    println!("Capabilities dropped: {}", policy.capabilities_dropped());
-    println!("Runs as non-root: {}", policy.runs_as_non_root());
+    println!("Filesystem isolation: {}", policy.security.enable_filesystem_isolation);
+    println!("Process isolation: {}", policy.security.enable_process_isolation);
 
     // Create permissive policy
-    let permissive_policy = Policy::permissive();
+    let permissive_policy = Policy::low_security();
     println!(
         "Permissive policy allows network: {}",
         permissive_policy.allows_network()
     );
     println!(
-        "Permissive policy allows writes: {}",
-        permissive_policy.allows_writes()
+        "Permissive policy security level: {:?}",
+        permissive_policy.security.security_level
     );
 
     Ok(())
@@ -421,15 +419,19 @@ mod tests {
         assert_eq!(scenario.config.timeout_ms, 1000);
     }
 
-    #[test]
-    fn test_deterministic_manager() {
-        let mut manager = DeterministicManager::new().with_seed(42);
-        let ctx = manager.create_context(Some(42), None);
-        manager.set_context(ctx);
-
-        let output1 = manager.generate_output(3).unwrap();
-        let output2 = manager.generate_output(3).unwrap();
-
-        assert_eq!(output1, output2);
+    #[tokio::test]
+    async fn test_deterministic_manager() {
+        let manager = DeterministicManager::new(42);
+        
+        let random1 = manager.random().await;
+        let random2 = manager.random().await;
+        
+        // Should be deterministic (same seed produces same sequence)
+        assert_ne!(random1, random2); // Different values in sequence
+        
+        let port1 = manager.allocate_port().await.unwrap();
+        let port2 = manager.allocate_port().await.unwrap();
+        assert_eq!(port1, 10000);
+        assert_eq!(port2, 10001);
     }
 }

@@ -19,9 +19,9 @@ use std::borrow::Cow;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::mpsc;
-use tokio::io::{AsyncRead, AsyncWrite};
-use futures::stream::{Stream, StreamExt};
-use futures::sink::SinkExt;
+// use tokio::io::{AsyncRead, AsyncWrite}; // Unused for now
+// use futures_util::stream::{Stream, StreamExt}; // Unused for now
+use futures_util::sink::SinkExt;
 
 /// Zero-copy artifact data
 #[derive(Debug, Clone)]

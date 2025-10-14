@@ -60,14 +60,14 @@ fn demonstrate_security_policies() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔒 2. Security Policy Enforcement");
     println!("{}", "-".repeat(50));
 
-    // Create restrictive security policy with new API structure
+    // Create restrictive security policy with current API structure
     let policy = Policy {
         security: clnrm::policy::SecurityPolicy {
             security_level: SecurityLevel::Locked,
             enable_network_isolation: true,
             enable_filesystem_isolation: true,
             allowed_ports: vec![80, 443],
-            blocked_addresses: vec!["rm".to_string(), "format".to_string()],
+            blocked_addresses: vec!["127.0.0.1".to_string()],
             enable_data_redaction: true,
             redaction_patterns: vec![],
             enable_audit_logging: true,

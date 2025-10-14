@@ -18,7 +18,7 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 /// Snapshot manager for cleanroom testing
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub struct SnapshotManager {
     /// Session ID
@@ -30,7 +30,7 @@ pub struct SnapshotManager {
 }
 
 /// Snapshot data structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct SnapshotData {
     /// Session ID
     pub session_id: Uuid,
@@ -45,7 +45,7 @@ pub struct SnapshotData {
 }
 
 /// Snapshot structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Snapshot {
     /// Snapshot name
     pub name: String,
@@ -133,7 +133,7 @@ pub enum SnapshotValidationStatus {
 }
 
 /// Snapshot statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct SnapshotStatistics {
     /// Total snapshots
     pub total_snapshots: u32,
@@ -492,7 +492,7 @@ impl SnapshotData {
 }
 
 /// Snapshot report
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct SnapshotReport {
     /// Session ID
     pub session_id: Uuid,
@@ -523,7 +523,7 @@ impl SnapshotReport {
 }
 
 /// Snapshot summary
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct SnapshotSummary {
     /// Snapshot name
     pub name: String,

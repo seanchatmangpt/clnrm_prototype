@@ -4,8 +4,8 @@
 //! using proptest for comprehensive coverage.
 
 use clnrm::{
-    CleanroomConfig, CleanroomError, CoverageTracker, DeterministicManager, ErrorKind,
-    GenericContainer, NetworkPolicy, Policy, PostgresContainer, RedisContainer, ResourceLimits,
+    CleanroomConfig, CleanroomError, CoverageTracker, DeterministicManager,
+    GenericContainer, Policy, PostgresContainer, RedisContainer, ResourceLimits,
     SecurityLevel, SnapshotManager, TestReport, TracingManager,
 };
 use proptest::prelude::*;

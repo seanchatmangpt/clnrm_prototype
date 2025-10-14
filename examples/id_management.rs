@@ -5,6 +5,7 @@
 
 use clnrm::CleanroomConfig;
 use clnrm::CleanroomEnvironment;
+use clnrm::ids::{ContainerId, SessionId, TaskId, TestId, ScenarioId};
 use uuid::Uuid;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

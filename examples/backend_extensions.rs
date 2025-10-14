@@ -6,6 +6,8 @@
 use clnrm::CleanroomConfig;
 use clnrm::CleanroomEnvironment;
 use clnrm::Result;
+use clnrm::backend::extensions::*;
+use clnrm::backend::capabilities::*;
 use std::collections::HashMap;
 use std::time::Duration;
 

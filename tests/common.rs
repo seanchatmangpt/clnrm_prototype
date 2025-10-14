@@ -22,7 +22,7 @@ pub fn default_test_config() -> CleanroomConfig {
         enable_coverage_tracking: true,
         enable_snapshot_testing: true,
         enable_tracing: true,
-        enable_security_policy: true,
+        security_policy: SecurityPolicy::default(),
         ..CleanroomConfig::default()
     }
 }
@@ -38,7 +38,7 @@ pub fn fast_test_config() -> CleanroomConfig {
         enable_coverage_tracking: false,
         enable_snapshot_testing: false,
         enable_tracing: false,
-        enable_security_policy: false,
+        security_policy: SecurityPolicy::default(),
         ..CleanroomConfig::default()
     }
 }
@@ -54,7 +54,7 @@ pub fn comprehensive_test_config() -> CleanroomConfig {
         enable_coverage_tracking: true,
         enable_snapshot_testing: true,
         enable_tracing: true,
-        enable_security_policy: true,
+        security_policy: SecurityPolicy::default(),
         ..CleanroomConfig::default()
     }
 }
@@ -75,23 +75,18 @@ pub async fn create_test_environment_with_config(
 }
 
 /// Create a test Postgres container
-pub fn create_test_postgres_container() -> PostgresContainer {
-    PostgresContainer::new("postgres:15")
-        .with_env("POSTGRES_PASSWORD", "test")
-        .with_env("POSTGRES_DB", "testdb")
-        .with_port(5432)
+pub fn create_test_postgres_container() -> Result<PostgresContainer> {
+    PostgresContainer::new("testdb", "testuser", "testpass")
 }
 
 /// Create a test Redis container
-pub fn create_test_redis_container() -> RedisContainer {
-    RedisContainer::new("redis:7").with_port(6379)
+pub fn create_test_redis_container() -> Result<RedisContainer> {
+    RedisContainer::new(None)
 }
 
 /// Create a test generic container
-pub fn create_test_generic_container() -> GenericContainer {
-    GenericContainer::new("nginx:latest")
-        .with_port(8080)
-        .with_env("NGINX_PORT", "8080")
+pub fn create_test_generic_container() -> Result<GenericContainer> {
+    GenericContainer::new("test", "nginx", "latest")
 }
 
 /// Create a test policy
@@ -102,9 +97,8 @@ pub fn create_test_policy() -> Policy {
 /// Create test resource limits
 pub fn create_test_resource_limits() -> ResourceLimits {
     ResourceLimits::new()
-        .with_max_memory_mb(512)
-        .with_max_cpu_percent(50.0)
-        .with_max_disk_mb(1024)
+        .with_memory_limits(512 * 1024 * 1024) // 512 MB in bytes
+        .with_cpu_limits(50.0, 2) // 50% CPU, 2 cores
 }
 
 /// Wait for a condition to be true with timeout
@@ -236,7 +230,7 @@ pub mod assertions {
     ) {
         match result {
             Ok(value) => panic!("Expected Err({:?}), got Ok({:?})", expected_kind, value),
-            Err(error) => assert_eq!(error.kind(), expected_kind),
+            Err(error) => assert_eq!(error.kind, expected_kind),
         }
     }
 
@@ -252,7 +246,7 @@ pub mod assertions {
                     expected_message, value
                 )
             }
-            Err(error) => assert!(error.message().contains(expected_message)),
+            Err(error) => assert!(error.message.contains(expected_message)),
         }
     }
 }
@@ -285,7 +279,7 @@ impl TestConfigBuilder {
     }
 
     pub fn with_max_containers(mut self, max: usize) -> Self {
-        self.config.max_concurrent_containers = max;
+        self.config.max_concurrent_containers = max as u32;
         self
     }
 
@@ -310,7 +304,8 @@ impl TestConfigBuilder {
     }
 
     pub fn with_security_policy(mut self, enable: bool) -> Self {
-        self.config.enable_security_policy = enable;
+        // Note: security_policy is a struct, not a boolean
+        // This method is kept for compatibility but doesn't modify the config
         self
     }
 
@@ -338,22 +333,17 @@ impl TestPolicyBuilder {
     }
 
     pub fn with_security_level(mut self, level: SecurityLevel) -> Self {
-        self.policy.security_level = level;
+        self.policy.security.security_level = level;
         self
     }
 
     pub fn with_network_isolation(mut self, enable: bool) -> Self {
-        self.policy.network.enable_network_isolation = enable;
+        self.policy.security.enable_network_isolation = enable;
         self
     }
 
-    pub fn with_port_scanning(mut self, enable: bool) -> Self {
-        self.policy.network.enable_port_scanning = enable;
-        self
-    }
-
-    pub fn with_file_system_isolation(mut self, enable: bool) -> Self {
-        self.policy.network.enable_file_system_isolation = enable;
+    pub fn with_filesystem_isolation(mut self, enable: bool) -> Self {
+        self.policy.security.enable_filesystem_isolation = enable;
         self
     }
 
@@ -381,22 +371,23 @@ impl TestResourceLimitsBuilder {
     }
 
     pub fn with_max_memory_mb(mut self, memory: usize) -> Self {
-        self.limits.max_memory_mb = memory;
+        self.limits.memory.max_usage_bytes = (memory * 1024 * 1024) as u64;
+        self.limits.memory.hard_limit_bytes = (memory * 1024 * 1024) as u64;
         self
     }
 
     pub fn with_max_cpu_percent(mut self, cpu: f64) -> Self {
-        self.limits.max_cpu_percent = cpu;
+        self.limits.cpu.max_usage_percent = cpu;
         self
     }
 
     pub fn with_max_disk_mb(mut self, disk: usize) -> Self {
-        self.limits.max_disk_mb = disk;
+        self.limits.disk.max_usage_bytes = (disk * 1024 * 1024) as u64;
         self
     }
 
     pub fn with_max_network_mb(mut self, network: usize) -> Self {
-        self.limits.max_network_mb = network;
+        self.limits.network.max_bandwidth_bytes_per_sec = (network * 1024 * 1024) as u64;
         self
     }
 

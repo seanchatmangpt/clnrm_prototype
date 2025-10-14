@@ -55,7 +55,7 @@ impl SerializableSerializableInstant {
 }
 
 /// Tracing manager for cleanroom testing
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub struct TracingManager {
     /// Session ID
@@ -67,7 +67,7 @@ pub struct TracingManager {
 }
 
 /// Tracing data structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct TracingData {
     /// Session ID
     pub session_id: Uuid,
@@ -108,7 +108,7 @@ impl TracingData {
 }
 
 /// Span structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Span {
     /// Span name
     pub name: String,
@@ -183,7 +183,7 @@ pub enum SpanStatus {
 }
 
 /// Span event
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct SpanEvent {
     /// Event name
     pub name: String,
@@ -194,7 +194,7 @@ pub struct SpanEvent {
 }
 
 /// Metric structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Metric {
     /// Metric name
     pub name: String,
@@ -241,7 +241,7 @@ pub enum MetricType {
 }
 
 /// Log entry structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct LogEntry {
     /// Log level
     pub level: LogLevel,
@@ -298,7 +298,7 @@ pub enum LogLevel {
 }
 
 /// Tracing statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct TracingStatistics {
     /// Total spans
     pub total_spans: u32,
@@ -707,7 +707,7 @@ impl TracingData {
 }
 
 /// Tracing report
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct TracingReport {
     /// Session ID
     pub session_id: Uuid,
@@ -753,7 +753,7 @@ impl TracingReport {
 }
 
 /// Span summary
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct SpanSummary {
     /// Span name
     pub name: String,
@@ -776,7 +776,7 @@ pub struct SpanSummary {
 }
 
 /// Metric summary
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct MetricSummary {
     /// Metric name
     pub name: String,

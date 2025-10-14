@@ -498,25 +498,25 @@ fn demo_ggen_policy() -> Result<()> {
     // Create secure policy
     let policy = Policy::locked();
     println!(
-        "Policy is secure by default: {}",
-        policy.is_secure_by_default()
+        "Policy security level: {:?}",
+        policy.security.security_level
     );
     println!(
-        "Network disabled by default: {}",
-        policy.network_disabled_by_default()
+        "Network isolation enabled: {}",
+        policy.security.enable_network_isolation
     );
-    println!("Capabilities dropped: {}", policy.capabilities_dropped());
-    println!("Runs as non-root: {}", policy.runs_as_non_root());
+    println!("Filesystem isolation: {}", policy.security.enable_filesystem_isolation);
+    println!("Process isolation: {}", policy.security.enable_process_isolation);
 
     // Create permissive policy
-    let permissive_policy = Policy::permissive();
+    let permissive_policy = Policy::with_security_level(SecurityLevel::Low);
     println!(
         "Permissive policy allows network: {}",
-        permissive_policy.allows_network()
+        !permissive_policy.security.enable_network_isolation
     );
     println!(
         "Permissive policy allows writes: {}",
-        permissive_policy.allows_writes()
+        !permissive_policy.security.enable_filesystem_isolation
     );
 
     Ok(())

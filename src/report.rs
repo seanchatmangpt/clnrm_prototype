@@ -58,7 +58,7 @@ impl<'de> serde::Deserialize<'de> for SerializableInstant {
 }
 
 /// Test report generator for cleanroom testing
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub struct TestReport {
     /// Session ID
@@ -326,6 +326,29 @@ impl TestReport {
         let mut data = self.report_data.lock().await;
         data.redaction_data = Some(redaction_data);
         Ok(())
+    }
+
+    /// Record test execution
+    pub fn record_test_execution(&self, test_name: String, success: bool, execution_time: Duration) {
+        // This is a synchronous method that updates the test summary
+        // In a real implementation, this would need to be async or use a different approach
+        // For now, we'll just update the summary directly
+        let mut data = self.report_data.try_lock().unwrap();
+        data.test_summary.total_tests += 1;
+        if success {
+            data.test_summary.passed_tests += 1;
+        } else {
+            data.test_summary.failed_tests += 1;
+        }
+        data.test_summary.test_duration += execution_time;
+        data.test_summary.success_rate = (data.test_summary.passed_tests as f64 / data.test_summary.total_tests as f64) * 100.0;
+        data.test_summary.average_test_duration = data.test_summary.test_duration / data.test_summary.total_tests;
+    }
+
+    /// Get test summary
+    pub fn test_summary(&self) -> TestSummary {
+        let data = self.report_data.try_lock().unwrap();
+        data.test_summary.clone()
     }
 
     /// Add recommendation

@@ -4,8 +4,8 @@
 //! from a user perspective with Given-When-Then scenarios.
 
 use clnrm::{
-    CleanroomConfig, CleanroomEnvironment, CleanroomGuard, CoverageTracker, DeterministicManager,
-    Error as CleanroomError, GenericContainer, Policy, PostgresContainer, RedisContainer,
+    CleanroomConfig, CleanroomEnvironment, Error as CleanroomError, CleanroomGuard, CoverageTracker,
+    DeterministicManager, GenericContainer, Policy, PostgresContainer, RedisContainer,
     ResourceLimits, SecurityLevel, SnapshotManager, TestReport, TracingManager,
 };
 use futures_util::future;

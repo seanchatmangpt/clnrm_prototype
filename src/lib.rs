@@ -254,6 +254,7 @@ pub mod artifacts;
 pub mod assertions;
 pub mod attest;
 pub mod backend;
+pub mod builder;
 pub mod cleanroom;
 pub mod config;
 pub mod container_base;
@@ -262,16 +263,19 @@ pub mod coverage;
 pub mod determinism;
 pub mod error;
 pub mod error_helpers;
+pub mod ids;
 pub mod lifecycle;
 pub mod limits;
 pub mod macros;
 pub mod metrics_builder;
+pub mod observability;
 pub mod policy;
 pub mod report;
 pub mod runtime;
 pub mod scenario;
 pub mod serializable_instant;
 pub mod snapshots;
+pub mod streaming;
 pub mod test_utils;
 pub mod tracing;
 
@@ -283,6 +287,7 @@ pub mod services;
 pub use crate::cleanroom::{
     CleanroomEnvironment, CleanroomGuard, ContainerMetrics, ContainerStatus, ContainerWrapper,
 };
+pub use crate::builder::CleanroomBuilder;
 pub use artifacts::{ArtifactCollector, ForensicsBundle};
 pub use assertions::Assert;
 pub use attest::{Attestation, AttestationGenerator};
@@ -297,12 +302,15 @@ pub use error_helpers::{
     config_error, container_error, internal_error, network_error, policy_error, resource_error,
     timeout_error,
 };
+pub use ids::{ContainerId, SessionId, TaskId, TestId, ScenarioId};
 pub use limits::ResourceLimits;
 pub use metrics_builder::ContainerMetricsBuilder;
+pub use observability::{ObservabilityLayer, TracingLevel, Metrics};
 pub use policy::{Policy, SecurityLevel};
 pub use report::TestReport;
 pub use scenario::{scenario, RunResult, Scenario};
 pub use snapshots::SnapshotManager;
+pub use streaming::{ArtifactStream, StreamingCollector, ArtifactData, ArtifactMetadata, ArtifactType};
 pub use test_utils::{TestContainerHelper, TestEnvironmentBuilder};
 pub use tracing::TracingManager;
 

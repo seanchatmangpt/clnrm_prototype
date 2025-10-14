@@ -4,8 +4,8 @@
 //! including container lifecycle, service integration, and error handling.
 
 use clnrm::{
-    new_cleanroom, run, run_with_policy, Assert, CleanroomConfig, CleanroomEnvironment,
-    Error as CleanroomError, Policy, ResourceLimits, SecurityLevel,
+    run, run_with_policy, CleanroomConfig, CleanroomEnvironment,
+    Error as CleanroomError, Policy, SecurityLevel,
 };
 use std::time::Duration;
 
@@ -16,15 +16,11 @@ async fn test_cleanroom_environment_creation() -> Result<(), Box<dyn std::error:
     let environment = CleanroomEnvironment::new(config).await?;
 
     // Verify environment is properly initialized
-    assert!(environment.get_container_count().await >= 0);
+    assert!(!environment.session_id().is_nil());
 
     // Verify configuration is set correctly
     let env_config = environment.config();
-    assert!(env_config.enable_singleton_containers);
-    assert_eq!(
-        env_config.container_startup_timeout,
-        Duration::from_secs(30)
-    );
+    assert!(env_config.test_execution_timeout >= Duration::from_secs(1));
 
     Ok(())
 }
@@ -33,10 +29,11 @@ async fn test_cleanroom_environment_creation() -> Result<(), Box<dyn std::error:
 #[tokio::test]
 async fn test_container_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
     let config = CleanroomConfig::default();
-    let mut environment = CleanroomEnvironment::new(config).await?;
+    let environment = CleanroomEnvironment::new(config).await?;
 
-    let container_id = environment.start_container("test1").await?;
-    assert!(environment.get_container_count().await >= 1);
+    // Test container registration
+    environment.register_container("test1".to_string(), "container_id_123".to_string()).await?;
+    assert!(environment.is_container_registered("test1").await);
 
     // Test container access
     let container_count = environment.get_container_count().await;

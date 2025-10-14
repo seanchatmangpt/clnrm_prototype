@@ -24,7 +24,7 @@ use crate::policy::SecurityPolicy;
 use crate::limits::ResourceLimits;
 use crate::cleanroom::CleanroomEnvironment;
 use std::time::Duration;
-use std::collections::HashMap;
+// use std::collections::HashMap; // Unused for now
 
 /// Type-safe builder for CleanroomEnvironment
 ///
@@ -264,11 +264,11 @@ impl Default for CleanroomBuilder<Initial> {
 impl CleanroomBuilder<Initial> {
     /// Create a secure environment with locked-down policies
     pub fn secure() -> CleanroomBuilder<WithSecurity> {
-        Self::new().with_security_policy(SecurityPolicy::locked())
+        Self::new().with_security_policy(SecurityPolicy::with_security_level(clnrm::SecurityLevel::Locked))
     }
 
     /// Create a high-performance environment with optimized settings
-    pub fn performance() -> CleanroomBuilder<WithTimeout> {
+    pub fn performance() -> CleanroomBuilder<Ready> {
         Self::new()
             .with_timeout(Duration::from_secs(60))
             .with_singleton_containers(true)
