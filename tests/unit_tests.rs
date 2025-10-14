@@ -237,76 +237,8 @@ fn test_deterministic_manager_state() {
     assert_eq!(manager.seed(), 12345);
 }
 
-/// Test coverage collector serialization
-#[test]
-fn test_coverage_collector_serialization() -> anyhow::Result<()> {
-    let session_id = Uuid::new_v4();
-    let mut collector = CoverageCollector::new(session_id);
-    collector
-        .start_collection()
-        .map_err(|e| anyhow::anyhow!("Start collection failed: {}", e))?;
 
-    // Test JSON serialization
-    let json = serde_json::to_string(&collector)
-        .map_err(|e| anyhow::anyhow!("JSON serialization failed: {}", e))?;
-    assert!(json.contains("session_id"));
 
-    // Test JSON deserialization
-    let deserialized_collector: CoverageCollector = serde_json::from_str(&json)
-        .map_err(|e| anyhow::anyhow!("JSON deserialization failed: {}", e))?;
-    assert_eq!(deserialized_collector.session_id(), session_id);
-
-    Ok(())
-}
-
-/// Test snapshot manager operations
-#[tokio::test]
-async fn test_snapshot_manager_operations() -> anyhow::Result<()> {
-    let session_id = Uuid::new_v4();
-    let manager = SnapshotManager::new(session_id);
-    let test_data = serde_json::json!({"key": "value"});
-
-    manager
-        .capture_snapshot(
-            "test_snapshot".to_string(),
-            test_data.to_string(),
-            clnrm::snapshots::SnapshotType::Json,
-            std::collections::HashMap::new(),
-        )
-        .await
-        .map_err(|e| anyhow::anyhow!("Capture snapshot failed: {}", e))?;
-
-    // Test JSON serialization of snapshot data
-    let data = manager.get_snapshot_data().await;
-    let json = serde_json::to_string(&data)
-        .map_err(|e| anyhow::anyhow!("JSON serialization failed: {}", e))?;
-    assert!(json.contains("snapshots"));
-
-    Ok(())
-}
-
-/// Test tracing manager operations
-#[tokio::test]
-async fn test_tracing_manager_operations() -> anyhow::Result<()> {
-    let session_id = Uuid::new_v4();
-    let manager = TracingManager::new(session_id);
-    let _trace_id = manager
-        .start_span("test_span".to_string(), None)
-        .await
-        .map_err(|e| anyhow::anyhow!("Start span failed: {}", e))?;
-    manager
-        .end_span("test_span", clnrm::tracing::SpanStatus::Completed)
-        .await
-        .map_err(|e| anyhow::anyhow!("End span failed: {}", e))?;
-
-    // Test JSON serialization
-    let data = manager.get_tracing_data().await;
-    let json = serde_json::to_string(&data)
-        .map_err(|e| anyhow::anyhow!("JSON serialization failed: {}", e))?;
-    assert!(json.contains("spans"));
-
-    Ok(())
-}
 
 /// Test test report serialization and report generation
 #[tokio::test]

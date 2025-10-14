@@ -3,7 +3,6 @@
 use crate::error::Result;
 use crate::cleanroom::CleanroomEnvironment;
 use crate::serializable_instant::SerializableInstant;
-use crate::test_utils::mock_time::conditional_sleep;
 use std::sync::Arc;
 use std::collections::HashMap;
 use tokio::sync::RwLock;
@@ -548,7 +547,7 @@ impl Default for ConsoleMetricsExporter {
 impl ConsoleMetricsExporter {
     /// Create a new console metrics exporter
     pub fn new() -> Self {
-        Self::default()
+        Self
     }
 }
 
@@ -580,6 +579,12 @@ impl MetricsExporter for ConsoleMetricsExporter {
 /// Console span collector
 #[derive(Debug)]
 pub struct ConsoleSpanCollector;
+
+impl Default for ConsoleSpanCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl ConsoleSpanCollector {
     /// Create a new console span collector
@@ -682,7 +687,8 @@ mod tests {
         manager.start_metrics_collection().await.unwrap();
         
         // Let it collect some metrics
-        conditional_sleep(std::time::Duration::from_millis(1)).await;
+        // Use conditional sleep for faster tests
+        crate::test_utils::mock_time::conditional_sleep(std::time::Duration::from_millis(1)).await;
         
         let history = manager.get_metrics_history().await;
         assert!(!history.is_empty());

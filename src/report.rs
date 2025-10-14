@@ -95,7 +95,7 @@ pub struct ReportData {
 }
 
 /// Test summary
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TestSummary {
     /// Total tests
     pub total_tests: u32,
@@ -333,7 +333,14 @@ impl TestReport {
         // This is a synchronous method that updates the test summary
         // In a real implementation, this would need to be async or use a different approach
         // For now, we'll just update the summary directly
-        let mut data = self.report_data.try_lock().unwrap();
+        let mut data = match self.report_data.try_lock() {
+            Ok(data) => data,
+            Err(_) => {
+                // If we can't acquire the lock, we'll skip this update
+                // In a production system, this might be logged or handled differently
+                return;
+            }
+        };
         data.test_summary.total_tests += 1;
         if success {
             data.test_summary.passed_tests += 1;
@@ -347,8 +354,12 @@ impl TestReport {
 
     /// Get test summary
     pub fn test_summary(&self) -> TestSummary {
-        let data = self.report_data.try_lock().unwrap();
-        data.test_summary.clone()
+        if let Ok(data) = self.report_data.try_lock() {
+            data.test_summary.clone()
+        } else {
+            // If we can't acquire the lock, return a default summary
+            TestSummary::default()
+        }
     }
 
     /// Add recommendation

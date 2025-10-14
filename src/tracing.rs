@@ -9,7 +9,6 @@
 #![allow(dead_code)]
 
 use crate::error::{CleanroomError, Result};
-use crate::test_utils::mock_time::conditional_sleep;
 use crate::serializable_instant::SerializableInstant;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -536,7 +535,7 @@ impl TracingManager {
                 name: name.clone(),
                 value: metric.value,
                 metric_type: metric.metric_type.clone(),
-                timestamp: metric.timestamp.clone(),
+                timestamp: metric.timestamp,
                 unit: metric.unit.clone(),
                 tags_count: metric.tags.len(),
             });
@@ -1250,7 +1249,7 @@ mod tests {
     async fn test_serializable_instant_duration_calculations() {
         let start = SerializableInstant::now();
         // Use conditional sleep for faster tests
-        conditional_sleep(Duration::from_millis(1)).await;
+        crate::test_utils::mock_time::conditional_sleep(Duration::from_millis(1)).await;
         let end = SerializableInstant::now();
 
         let duration = end.duration_since(start);
@@ -1261,7 +1260,7 @@ mod tests {
     async fn test_serializable_instant_elapsed() {
         let instant = SerializableInstant::now();
         // Use conditional sleep for faster tests
-        conditional_sleep(Duration::from_millis(1)).await;
+        crate::test_utils::mock_time::conditional_sleep(Duration::from_millis(1)).await;
         let elapsed = instant.elapsed();
         assert!(elapsed.as_millis() >= 5);
     }
@@ -1282,7 +1281,7 @@ mod tests {
     async fn test_serializable_instant_ordering() {
         let instant1 = SerializableInstant::now();
         // Use conditional sleep for faster tests
-        conditional_sleep(Duration::from_millis(1)).await;
+        crate::test_utils::mock_time::conditional_sleep(Duration::from_millis(1)).await;
         let instant2 = SerializableInstant::now();
 
         assert!(instant1 < instant2);

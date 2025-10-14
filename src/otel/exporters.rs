@@ -70,6 +70,17 @@ pub struct PrometheusExporterConfig {
     pub metrics_path: String,
     /// Update interval
     pub update_interval: Duration,
+    /// Export format (text or protobuf)
+    pub format: PrometheusFormat,
+}
+
+/// Prometheus export format
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum PrometheusFormat {
+    /// Text format (default)
+    Text,
+    /// Protobuf format
+    Protobuf,
 }
 
 /// Batch configuration
@@ -134,6 +145,7 @@ impl Default for PrometheusExporterConfig {
             listen_address: "0.0.0.0:9090".to_string(),
             metrics_path: "/metrics".to_string(),
             update_interval: Duration::from_secs(10),
+            format: PrometheusFormat::Text,
         }
     }
 }

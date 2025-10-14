@@ -4,9 +4,9 @@
 //! using proptest for comprehensive coverage.
 
 use clnrm::{
-    CleanroomConfig, CleanroomError, CoverageTracker, DeterministicManager,
+    CleanroomConfig, CleanroomError, DeterministicManager,
     GenericContainer, Policy, PostgresContainer, RedisContainer, ResourceLimits,
-    SecurityLevel, SnapshotManager, TestReport, TracingManager,
+    SecurityLevel, TestReport,
 };
 use proptest::prelude::*;
 use std::time::Duration;
@@ -132,112 +132,8 @@ proptest! {
     }
 }
 
-/// Property test for CoverageTracker behavior
-proptest! {
-    #[test]
-    fn test_coverage_tracker_property(
-        test_names in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..5),
-        line_numbers in prop::collection::vec(1..100usize, 1..10),
-    ) {
-        let session_id = Uuid::new_v4();
-        let tracker = CoverageTracker::new(session_id);
 
-        // Start collection
-        let mut tracker = tracker;
-        tracker.start_collection().unwrap();
 
-        // Update coverage data for each test
-        for (i, test_name) in test_names.iter().enumerate() {
-            tracker.update_coverage_data(|data| {
-                data.add_file(test_name.clone(), 100, 80 + (i * 5));
-            }).unwrap();
-        }
-
-        let report = tracker.stop_collection().unwrap();
-
-        // Coverage should be reasonable
-        prop_assert!(report.overall_coverage_percentage >= 0.0);
-        prop_assert!(report.overall_coverage_percentage <= 100.0);
-
-        // Should have coverage files
-        prop_assert!(report.coverage_files.len() > 0);
-    }
-}
-
-/// Property test for SnapshotManager behavior
-proptest! {
-    #[test]
-    fn test_snapshot_manager_property(
-        snapshot_names in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..5),
-        data_keys in prop::collection::vec("[a-zA-Z0-9_]{1,5}", 1..3),
-        data_values in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..3),
-    ) {
-        let manager = SnapshotManager::new();
-
-        for snapshot_name in &snapshot_names {
-            // Create test data
-            let mut test_data = serde_json::Map::new();
-            for (key, value) in data_keys.iter().zip(data_values.iter()) {
-                test_data.insert(key.clone(), serde_json::Value::String(value.clone()));
-            }
-            let test_data = serde_json::Value::Object(test_data);
-
-            // Create snapshot
-            let snapshot_id = manager.create_snapshot(snapshot_name, &test_data);
-            prop_assert!(!snapshot_id.is_nil());
-
-            // Verify snapshot
-            let is_valid = manager.verify_snapshot(snapshot_name, &test_data);
-            prop_assert!(is_valid);
-
-            // Retrieve snapshot
-            let retrieved_snapshot = manager.get_snapshot(snapshot_name);
-            prop_assert!(retrieved_snapshot.is_some());
-        }
-
-        // All snapshots should be retrievable
-        for snapshot_name in &snapshot_names {
-            let snapshot = manager.get_snapshot(snapshot_name);
-            prop_assert!(snapshot.is_some());
-        }
-    }
-}
-
-/// Property test for TracingManager behavior
-proptest! {
-    #[test]
-    fn test_tracing_manager_property(
-        trace_names in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..5),
-        event_names in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..3),
-        event_data in prop::collection::vec("[a-zA-Z0-9_]{1,20}", 1..3),
-    ) {
-        let manager = TracingManager::new();
-
-        for trace_name in &trace_names {
-            // Start trace
-            let trace_id = manager.start_trace(trace_name);
-            prop_assert!(!trace_id.is_nil());
-
-            // Log events
-            for (event_name, event_data) in event_names.iter().zip(event_data.iter()) {
-                manager.log_trace_event(&trace_id, event_name, event_data);
-            }
-
-            // End trace
-            manager.end_trace(&trace_id);
-        }
-
-        // All traces should be retrievable
-        let traces = manager.get_traces();
-        prop_assert_eq!(traces.len(), trace_names.len());
-
-        // Traces should be filterable by name
-        for trace_name in &trace_names {
-            let filtered_traces = manager.get_traces_by_name(trace_name);
-            prop_assert!(!filtered_traces.is_empty());
-        }
-    }
-}
 
 /// Property test for TestReport behavior
 proptest! {

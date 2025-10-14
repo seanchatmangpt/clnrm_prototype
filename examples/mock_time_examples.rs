@@ -46,7 +46,7 @@ async fn test_container_lifecycle_mock() -> Result<(), Box<dyn std::error::Error
 
 /// Example: Convert a slow performance test to use mock time
 #[tokio::test]
-async fn test_performance_metrics_mock() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_performance_mock() -> Result<(), Box<dyn std::error::Error>> {
     let env = create_mock_test_env().await?;
     
     // Execute test with mock time - runs instantly

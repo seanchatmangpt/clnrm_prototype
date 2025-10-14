@@ -228,7 +228,7 @@ async fn negative_test_container_status_accuracy() {
 /// - Metrics should fail or return zeros without Docker
 #[tokio::test]
 #[ignore] // Run manually
-async fn negative_test_metrics_accuracy() {
+async fn negative_test_placeholder() {
     println!("\n🔍 NEGATIVE TEST: Testing metrics accuracy...");
 
     use clnrm::ContainerWrapper;

@@ -10,7 +10,7 @@ use opentelemetry::{
     Key, KeyValue, Value,
 };
 use opentelemetry_sdk::{
-    logs::{LoggerProvider as SdkLoggerProvider, LogRecordProcessor},
+    logs::{LoggerProvider as SdkLoggerProvider, LogRecordProcessor, LoggerProviderBuilder},
     Resource,
 };
 use opentelemetry_stdout::LogExporter as StdoutLogExporter;
@@ -119,7 +119,7 @@ impl OtelLoggingManager {
             SdkLoggerProvider::builder()
                 .with_resource(resource)
                 .with_processor(processor)
-                .build(),
+                .build()
         );
 
         let logger = logger_provider.logger("cleanroom");

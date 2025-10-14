@@ -4,7 +4,6 @@
 //! with proper cancellation, timeout handling, and resource cleanup.
 
 use crate::error::{BackendError, Result};
-use crate::test_utils::mock_time::conditional_sleep;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -631,7 +630,7 @@ mod tests {
                 "test_task".to_string(),
                 Box::new(|_context| {
                     Box::pin(async move {
-                        conditional_sleep(Duration::from_millis(10)).await;
+                        crate::test_utils::mock_time::conditional_sleep(Duration::from_millis(10)).await;
                         Ok::<(), crate::error::CleanroomError>(())
                     })
                         as Pin<Box<dyn Future<Output = Result<()>> + Send + 'static>>
@@ -659,7 +658,7 @@ mod tests {
                 Duration::from_millis(50),
                 Box::new(|_context| {
                     Box::pin(async move {
-                        conditional_sleep(Duration::from_millis(100)).await;
+                        crate::test_utils::mock_time::conditional_sleep(Duration::from_millis(100)).await;
                         Ok::<(), crate::error::CleanroomError>(())
                     })
                         as Pin<Box<dyn Future<Output = Result<()>> + Send + 'static>>
@@ -683,7 +682,7 @@ mod tests {
                     format!("task_{}", i),
                     Box::new(|_context| {
                         Box::pin(async move {
-                            conditional_sleep(Duration::from_millis(10)).await;
+                            crate::test_utils::mock_time::conditional_sleep(Duration::from_millis(10)).await;
                             Ok::<(), crate::error::CleanroomError>(())
                         })
                             as Pin<Box<dyn Future<Output = Result<()>> + Send + 'static>>
@@ -745,7 +744,7 @@ mod tests {
                     format!("stats_task_{}", i),
                     Box::new(|_context| {
                         Box::pin(async move {
-                            conditional_sleep(Duration::from_millis(10)).await;
+                            crate::test_utils::mock_time::conditional_sleep(Duration::from_millis(10)).await;
                             Ok::<(), crate::error::CleanroomError>(())
                         })
                             as Pin<Box<dyn Future<Output = Result<()>> + Send + 'static>>

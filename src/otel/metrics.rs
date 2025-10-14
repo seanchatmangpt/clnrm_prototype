@@ -10,7 +10,7 @@ use opentelemetry::{
     Key, KeyValue, Value,
 };
 use opentelemetry_sdk::{
-    metrics::{MeterProvider as SdkMeterProvider, PeriodicReader},
+    metrics::{MeterProvider as SdkMeterProvider, PeriodicReader, MeterProviderBuilder},
     Resource,
 };
 use opentelemetry_stdout::MetricsExporter as StdoutMetricsExporter;
@@ -121,7 +121,7 @@ impl OtelMetricsManager {
             SdkMeterProvider::builder()
                 .with_resource(resource)
                 .with_reader(reader)
-                .build(),
+                .build()
         );
 
         let meter = meter_provider.meter("cleanroom");

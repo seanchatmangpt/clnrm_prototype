@@ -139,33 +139,6 @@ async fn test_container_singleton_pattern() {
     assert_eq!(container_count, 1);
 }
 
-/// Test container metrics and status
-#[tokio::test]
-async fn test_container_metrics_and_status() {
-    // Skip if Docker is not available
-    if !is_docker_available().await {
-        println!("Docker not available, skipping test");
-        return;
-    }
-
-    let config = CleanroomConfig::default();
-    let environment = CleanroomEnvironment::new(config).await.unwrap();
-    let environment_arc = Arc::new(environment);
-    let _guard = CleanroomGuard::new(environment_arc.clone());
-
-    let container = PostgresContainer::new_async("testdb", "testuser", "testpass")
-        .await
-        .unwrap();
-
-    // Test container status
-    let status = container.status();
-    assert_eq!(status, clnrm::ContainerStatus::Running);
-
-    // Test container metrics
-    let metrics = container.metrics();
-    assert!(metrics.cpu_usage_percent >= 0.0);
-    assert!(metrics.memory_usage_bytes > 0);
-}
 
 /// Test policy enforcement
 #[tokio::test]

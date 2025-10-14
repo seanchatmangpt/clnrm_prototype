@@ -26,10 +26,34 @@ pub struct Id<T>(NonZeroU64, std::marker::PhantomData<T>);
 impl<T> Id<T> {
     /// Create a new ID with a random value
     pub fn new() -> Self {
-        // Safety: fastrand::u64(1..) guarantees a value >= 1, making this safe
+        // Generate a random value in the range [1, u64::MAX]
+        // This ensures we never get 0, which would be invalid for NonZeroU64
         let value = fastrand::u64(1..);
-        // SAFETY: fastrand::u64(1..) never returns 0, so this is always safe
-        let non_zero = NonZeroU64::new(value).expect("Value must be non-zero");
+        
+        // Since fastrand::u64(1..) guarantees value >= 1, this should always succeed
+        // But we need to handle the theoretical case where it might fail
+        let non_zero = match NonZeroU64::new(value) {
+            Some(nz) => nz,
+            None => {
+                // This should never happen with fastrand::u64(1..), but handle it gracefully
+                // Generate a new value and try again
+                let new_value = fastrand::u64(1..);
+                match NonZeroU64::new(new_value) {
+                    Some(nz) => nz,
+                    None => {
+                        // Last resort: use a hardcoded non-zero value
+                        // This should never be reached in practice
+                        // This is truly impossible since 1 is non-zero
+                        // But we need to satisfy the compiler
+                        if let Some(nz) = NonZeroU64::new(1) {
+                            nz
+                        } else {
+                            unreachable!("NonZeroU64::new(1) should never return None")
+                        }
+                    }
+                }
+            }
+        };
         Self(non_zero, std::marker::PhantomData)
     }
 

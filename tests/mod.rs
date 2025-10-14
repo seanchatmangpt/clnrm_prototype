@@ -1,12 +1,32 @@
 //! Test modules for cleanroom testing framework
+//!
+//! This module provides a well-organized test structure with:
+//! - Core functionality tests
+//! - Integration tests
+//! - Performance tests
+//! - Test fixtures and utilities
 
-pub mod bdd_tests;
-pub mod example_mock_usage;
-pub mod fast_integration_tests;
-pub mod fast_config;
-pub mod integration_tests;
-pub mod mock_time;
-pub mod property_tests;
-pub mod test_lib;
-pub mod test_utils_mock;
-pub mod unit_tests;
+// Test fixtures and utilities
+pub mod fixtures;
+
+// Core functionality tests
+pub mod core;
+
+// Integration tests
+pub mod integration;
+
+// Performance tests
+pub mod performance;
+
+// Legacy tests (deprecated - use core, integration, or performance modules instead)
+pub mod legacy {
+    pub mod bdd_tests;
+}
+
+// Re-export commonly used fixtures and modules
+pub use fixtures::*;
+
+// Re-export main test modules for easier access
+pub use core::*;
+pub use integration::*;
+pub use performance::*;

@@ -10,7 +10,7 @@ use opentelemetry::{
     Key, KeyValue, Value,
 };
 use opentelemetry_sdk::{
-    trace::{Config, TracerProvider as SdkTracerProvider},
+    trace::{TracerProvider as SdkTracerProvider, TracerProviderBuilder},
     Resource,
 };
 use opentelemetry_stdout::SpanExporter as StdoutSpanExporter;

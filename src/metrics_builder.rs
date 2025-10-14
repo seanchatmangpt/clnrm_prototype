@@ -4,7 +4,7 @@
 //! repetitive construction patterns across container implementations.
 
 use crate::cleanroom::ContainerMetrics;
-use crate::test_utils::mock_time::conditional_sleep;
+use crate::conditional_sleep;
 use std::time::Instant;
 
 /// Builder for ContainerMetrics
