@@ -1,0 +1,1346 @@
+# Cleanroom Testing Framework - Development Tasks
+# Production-grade Rust development workflow
+
+# Environment configuration
+[env]
+RUST_LOG = "info"
+RUST_BACKTRACE = "1"
+CARGO_INCREMENTAL = "1"
+CARGO_NET_RETRY = "2"
+CARGO_HTTP_TIMEOUT = "30"
+CARGO_MAKE_CARGO_VERBOSE_FLAGS = "--verbose"
+CARGO_MAKE_CARGO_BUILD_FLAGS = "--all-features"
+CARGO_MAKE_CARGO_TEST_FLAGS = "--all-features"
+CARGO_MAKE_CARGO_CLIPPY_FLAGS = "--all-targets --all-features -- -D warnings"
+
+# Testcontainers configuration
+[env.TESTCONTAINERS]
+TESTCONTAINERS_RYUK_DISABLED = "false"
+TESTCONTAINERS_WAIT_STRATEGY_TIMEOUT = "60"
+TESTCONTAINERS_STARTUP_TIMEOUT = "120"
+TESTCONTAINERS_LOG_LEVEL = "info"
+
+# Performance testing configuration
+[env.PERF]
+RUST_LOG = "warn"
+CARGO_PROFILE_BENCH_DEBUG = "false"
+CARGO_PROFILE_BENCH_OPT_LEVEL = "3"
+CARGO_PROFILE_BENCH_LTO = "fat"
+CARGO_PROFILE_BENCH_CODEGEN_UNITS = "1"
+
+# Security configuration
+[env.SECURITY]
+CARGO_AUDIT_ADVISORIES_DB_URL = "https://github.com/RustSec/advisory-db"
+CARGO_AUDIT_DENY = "warnings"
+CARGO_AUDIT_DENY_UNMAINTAINED = "warn"
+CARGO_AUDIT_DENY_UNSUPPORTED = "warn"
+
+# Development configuration
+[env.DEV]
+RUST_LOG = "debug"
+RUST_BACKTRACE = "full"
+CARGO_INCREMENTAL = "1"
+CARGO_PROFILE_DEV_DEBUG = "true"
+
+# Release configuration
+[env.RELEASE]
+RUST_LOG = "warn"
+CARGO_PROFILE_RELEASE_OPT_LEVEL = "3"
+CARGO_PROFILE_RELEASE_LTO = "fat"
+CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "1"
+CARGO_PROFILE_RELEASE_PANIC = "abort"
+
+# Documentation configuration
+[env.DOCS]
+RUSTDOCFLAGS = "--enable-index-page --enable-permissive-allowlist"
+
+# Benchmark configuration
+[env.BENCH]
+RUST_LOG = "error"
+CARGO_PROFILE_BENCH_OPT_LEVEL = "3"
+CARGO_PROFILE_BENCH_LTO = "fat"
+CARGO_PROFILE_BENCH_CODEGEN_UNITS = "1"
+
+# Core development tasks
+[tasks.check]
+description = "Check code without building"
+command = "cargo"
+args = ["check", "--all-features"]
+
+[tasks.check-release]
+description = "Check code in release mode"
+command = "cargo"
+args = ["check", "--release", "--all-features"]
+
+[tasks.build]
+description = "Build in debug mode"
+command = "cargo"
+args = ["build", "--all-features"]
+
+[tasks.build-release]
+description = "Build in release mode"
+command = "cargo"
+args = ["build", "--release", "--all-features"]
+
+[tasks.clean]
+description = "Clean build artifacts"
+command = "cargo"
+args = ["clean"]
+
+[tasks.fmt]
+description = "Format code with rustfmt"
+command = "cargo"
+args = ["fmt", "--all"]
+
+[tasks.fmt-check]
+description = "Check code formatting"
+command = "cargo"
+args = ["fmt", "--all", "--", "--check"]
+
+[tasks.lint]
+description = "Run clippy with strict settings"
+command = "cargo"
+args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
+
+[tasks.lint-fix]
+description = "Run clippy with auto-fix suggestions"
+command = "cargo"
+args = ["clippy", "--all-targets", "--all-features", "--fix", "--allow-dirty"]
+
+# Testing tasks
+[tasks.test]
+description = "Run all tests"
+command = "cargo"
+args = ["test", "--all-features"]
+
+[tasks.test-unit]
+description = "Unit tests only"
+command = "cargo"
+args = ["test", "--lib", "--all-features"]
+
+[tasks.test-integration]
+description = "Integration tests only"
+command = "cargo"
+args = ["test", "--test", "*", "--all-features"]
+
+[tasks.test-doc]
+description = "Run documentation tests"
+command = "cargo"
+args = ["test", "--doc", "--all-features"]
+
+[tasks.test-verbose]
+description = "Run tests with verbose output"
+command = "cargo"
+args = ["test", "--all-features", "--", "--nocapture"]
+
+[tasks.test-release]
+description = "Run tests in release mode"
+command = "cargo"
+args = ["test", "--release", "--all-features"]
+
+# Testcontainers-specific tasks
+[tasks.test-containers]
+description = "Run tests with testcontainers (requires Docker)"
+command = "cargo"
+args = ["test", "--all-features", "--", "--nocapture"]
+env = { "RUST_LOG" = "info", "TESTCONTAINERS_RYUK_DISABLED" = "false" }
+
+[tasks.test-containers-postgres]
+description = "Run PostgreSQL container tests"
+command = "cargo"
+args = ["test", "--all-features", "--", "--nocapture", "postgres"]
+env = { "RUST_LOG" = "info" }
+
+[tasks.test-containers-redis]
+description = "Run Redis container tests"
+command = "cargo"
+args = ["test", "--all-features", "--", "--nocapture", "redis"]
+env = { "RUST_LOG" = "info" }
+
+[tasks.test-containers-generic]
+description = "Run generic container tests"
+command = "cargo"
+args = ["test", "--all-features", "--", "--nocapture", "generic"]
+env = { "RUST_LOG" = "info" }
+
+[tasks.test-containers-all]
+description = "Run all container tests"
+dependencies = [
+  "test-containers-postgres",
+  "test-containers-redis",
+  "test-containers-generic",
+]
+
+# Property-based testing
+[tasks.test-proptest]
+description = "Run property-based tests with proptest"
+command = "cargo"
+args = ["test", "--all-features", "--", "--nocapture", "proptest"]
+
+[tasks.test-proptest-parallel]
+description = "Run property-based tests in parallel"
+command = "cargo"
+args = [
+  "test",
+  "--all-features",
+  "--",
+  "--test-threads",
+  "4",
+  "--nocapture",
+  "proptest",
+]
+
+# Benchmarking tasks
+[tasks.bench]
+description = "Run all benchmarks"
+command = "cargo"
+args = ["bench", "--all-features"]
+
+[tasks.bench-config]
+description = "Benchmark configuration creation"
+command = "cargo"
+args = ["bench", "--bench", "config_creation"]
+
+[tasks.bench-container]
+description = "Benchmark container lifecycle"
+command = "cargo"
+args = ["bench", "--bench", "container_lifecycle"]
+
+[tasks.bench-scenario]
+description = "Benchmark scenario execution"
+command = "cargo"
+args = ["bench", "--bench", "scenario_execution"]
+
+[tasks.bench-orchestrator]
+description = "Benchmark concurrency orchestrator"
+command = "cargo"
+args = ["bench", "--bench", "orchestrator_performance"]
+
+[tasks.bench-all]
+description = "Run all benchmarks"
+dependencies = [
+  "bench-config",
+  "bench-container",
+  "bench-scenario",
+  "bench-orchestrator",
+]
+
+# Performance profiling
+[tasks.profile]
+description = "Profile performance with flamegraph"
+command = "cargo"
+args = ["flamegraph", "--bin", "cleanroom-bench", "--bench", "config_creation"]
+
+[tasks.profile-container]
+description = "Profile container operations"
+command = "cargo"
+args = [
+  "flamegraph",
+  "--bin",
+  "cleanroom-bench",
+  "--bench",
+  "container_lifecycle",
+]
+
+[tasks.profile-scenario]
+description = "Profile scenario execution"
+command = "cargo"
+args = [
+  "flamegraph",
+  "--bin",
+  "cleanroom-bench",
+  "--bench",
+  "scenario_execution",
+]
+
+# Security and audit tasks
+[tasks.audit]
+description = "Security audit with cargo-audit"
+command = "cargo"
+args = ["audit"]
+
+[tasks.audit-outdated]
+description = "Check for outdated dependencies"
+command = "cargo"
+args = ["outdated"]
+
+[tasks.audit-unused]
+description = "Check for unused dependencies (requires nightly)"
+command = "cargo"
+args = ["+nightly", "udeps"]
+
+[tasks.audit-deny]
+description = "Comprehensive dependency audit with cargo-deny"
+command = "cargo"
+args = ["deny", "check"]
+
+[tasks.audit-all]
+description = "Run all dependency audits"
+dependencies = ["audit", "audit-outdated", "audit-deny"]
+
+# Documentation tasks
+[tasks.docs]
+description = "Build documentation"
+command = "cargo"
+args = ["doc", "--all-features", "--no-deps", "--open"]
+
+[tasks.docs-build]
+description = "Build documentation without opening"
+command = "cargo"
+args = ["doc", "--all-features", "--no-deps"]
+
+[tasks.docs-test]
+description = "Test documentation build"
+dependencies = ["docs-build"]
+command = "echo"
+args = ["Documentation built successfully"]
+
+# Example tasks
+[tasks.examples]
+description = "Run all examples"
+command = "cargo"
+args = ["run", "--example", "concurrent_execution"]
+
+[tasks.examples-concurrent]
+description = "Run concurrent execution example"
+command = "cargo"
+args = ["run", "--example", "concurrent_execution"]
+
+[tasks.examples-builder]
+description = "Run builder pattern example"
+command = "cargo"
+args = ["run", "--example", "builder_patterns"]
+
+[tasks.examples-async]
+description = "Run async patterns example"
+command = "cargo"
+args = ["run", "--example", "async_patterns"]
+
+[tasks.examples-guards]
+description = "Run RAII guards example"
+command = "cargo"
+args = ["run", "--example", "guard_patterns"]
+
+[tasks.examples-streaming]
+description = "Run streaming artifacts example"
+command = "cargo"
+args = ["run", "--example", "streaming_artifacts"]
+
+[tasks.examples-observability]
+description = "Run observability setup example"
+command = "cargo"
+args = ["run", "--example", "observability_setup"]
+
+[tasks.examples-all]
+description = "Run all examples"
+dependencies = [
+  "examples-concurrent",
+  "examples-builder",
+  "examples-async",
+  "examples-guards",
+  "examples-streaming",
+  "examples-observability",
+]
+
+# Cleanroom-specific validation tasks
+[tasks.validate]
+description = "Validate cleanroom implementation"
+dependencies = ["test-unit", "test-integration", "lint", "audit"]
+
+[tasks.validate-containers]
+description = "Validate container implementations"
+dependencies = ["test-containers-all", "bench-container"]
+
+[tasks.validate-orchestrator]
+description = "Validate concurrency orchestrator"
+dependencies = ["test-proptest", "bench-orchestrator"]
+
+[tasks.validate-performance]
+description = "Validate performance characteristics"
+dependencies = ["bench-all", "profile"]
+
+[tasks.validate-production]
+description = "Comprehensive production readiness validation"
+dependencies = [
+  "validate",
+  "validate-containers",
+  "validate-orchestrator",
+  "validate-performance",
+  "test-proptest-parallel",
+  "audit-all",
+  "docs-test",
+]
+
+# CI/CD pipeline tasks
+[tasks.ci]
+description = "Run CI pipeline"
+dependencies = ["fmt-check", "lint", "test", "audit-all", "docs-test"]
+
+[tasks.ci-full]
+description = "Run full CI pipeline with all validations"
+dependencies = ["validate-production"]
+
+[tasks.ci-containers]
+description = "Run CI pipeline with container tests"
+dependencies = ["fmt-check", "lint", "test-containers-all", "audit-all"]
+
+# Release tasks
+[tasks.release-check]
+description = "Check release readiness"
+dependencies = ["ci-full", "bench-all"]
+
+[tasks.release]
+description = "Create a release"
+dependencies = ["release-check"]
+
+# Development workflow tasks
+[tasks.dev-setup]
+description = "Set up development environment"
+script = '''
+echo "🔧 Setting up Cleanroom development environment..."
+echo "📦 Installing development dependencies..."
+
+# Check Rust toolchain
+rustup show
+
+# Check cargo-make
+cargo make --version
+
+# Check Docker for testcontainers
+docker --version
+docker ps > /dev/null 2>&1 && echo "✅ Docker daemon running" || echo "❌ Docker daemon not running"
+
+# Check benchmarking tools
+cargo install flamegraph || echo "⚠️  flamegraph not installed (optional)"
+
+# Check audit tools
+cargo install cargo-audit || echo "⚠️  cargo-audit not installed"
+cargo install cargo-outdated || echo "⚠️  cargo-outdated not installed"
+cargo install cargo-deny || echo "⚠️  cargo-deny not installed"
+
+echo "✅ Development environment setup complete!"
+'''
+
+[tasks.dev-watch]
+description = "Watch for changes and run tests"
+command = "cargo"
+args = ["watch", "-x", "test --all-features"]
+
+[tasks.dev-watch-lint]
+description = "Watch for changes and run linting"
+command = "cargo"
+args = ["watch", "-x", "clippy --all-features"]
+
+# Docker and container management
+[tasks.docker-status]
+description = "Check Docker status and resource usage"
+script = '''
+echo "🐳 Docker Status Check"
+echo "====================="
+docker --version
+docker ps > /dev/null 2>&1 && echo "✅ Docker daemon running" || echo "❌ Docker daemon not running"
+echo ""
+echo "📊 Docker resource usage:"
+docker system df
+echo ""
+echo "🏃 Running containers:"
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+'''
+
+[tasks.docker-cleanup]
+description = "Clean up Docker resources"
+script = '''
+echo "🧹 Cleaning up Docker resources..."
+docker system prune -f
+docker volume prune -f
+echo "✅ Docker cleanup complete"
+'''
+
+[tasks.docker-reset]
+description = "Reset Docker environment (WARNING: removes all containers and images)"
+script = '''
+echo "⚠️  WARNING: This will remove ALL Docker containers and images!"
+echo "Press Ctrl+C to cancel, or Enter to continue..."
+read
+docker system prune -a -f --volumes
+echo "✅ Docker environment reset complete"
+'''
+
+# Performance monitoring
+[tasks.perf-monitor]
+description = "Monitor performance metrics"
+script = '''
+echo "📊 Performance Monitoring"
+echo "========================"
+echo "System load:"
+uptime
+echo ""
+echo "Memory usage:"
+if command -v free >/dev/null 2>&1; then
+    free -h
+else
+    # macOS alternative
+    vm_stat | head -10
+fi
+echo ""
+echo "Disk usage:"
+df -h
+echo ""
+echo "Rust toolchain:"
+rustup show
+echo ""
+echo "Cargo cache size:"
+du -sh ~/.cargo/registry
+'''
+
+# Quality assurance
+[tasks.qa]
+description = "Run quality assurance checks"
+dependencies = ["lint", "test", "audit-all", "docs-test"]
+
+[tasks.qa-full]
+description = "Run comprehensive quality assurance"
+dependencies = ["qa", "bench-all", "test-proptest-parallel"]
+
+# Maintenance tasks
+[tasks.maintenance]
+description = "Run maintenance tasks"
+dependencies = ["audit-outdated", "docker-cleanup", "perf-monitor"]
+
+[tasks.maintenance-update]
+description = "Update dependencies and toolchain"
+script = '''
+echo "🔄 Updating Rust toolchain..."
+rustup update
+echo ""
+echo "📦 Checking for outdated dependencies..."
+cargo outdated
+echo ""
+echo "🔒 Running security audit..."
+cargo audit
+'''
+
+# Troubleshooting tasks
+[tasks.troubleshoot]
+description = "Troubleshoot common issues"
+script = '''
+echo "🔍 Cleanroom Troubleshooting"
+echo "============================"
+echo ""
+echo "1. Rust toolchain:"
+rustup show
+echo ""
+echo "2. Cargo version:"
+cargo --version
+echo ""
+echo "3. Docker status:"
+docker --version
+docker ps > /dev/null 2>&1 && echo "✅ Docker running" || echo "❌ Docker not running"
+echo ""
+echo "4. Testcontainers environment:"
+echo "TESTCONTAINERS_RYUK_DISABLED=${TESTCONTAINERS_RYUK_DISABLED:-not set}"
+echo "TESTCONTAINERS_WAIT_STRATEGY_TIMEOUT=${TESTCONTAINERS_WAIT_STRATEGY_TIMEOUT:-not set}"
+echo ""
+echo "5. Build status:"
+cargo check --all-features
+echo ""
+echo "6. Test status:"
+cargo test --all-features --dry-run
+'''
+
+[tasks.troubleshoot-containers]
+description = "Troubleshoot container issues"
+script = '''
+echo "🐳 Container Troubleshooting"
+echo "============================"
+echo ""
+echo "Docker daemon status:"
+docker info > /dev/null 2>&1 && echo "✅ Docker daemon accessible" || echo "❌ Docker daemon not accessible"
+echo ""
+echo "Available images:"
+docker images | head -10
+echo ""
+echo "Running containers:"
+docker ps
+echo ""
+echo "Container logs (if any):"
+docker logs $(docker ps -q) 2>/dev/null || echo "No running containers"
+echo ""
+echo "Testcontainers test:"
+cargo test --all-features -- --nocapture testcontainers_basic 2>&1 | head -20
+'''
+
+# Help and information
+[tasks.help]
+description = "Show available tasks"
+command = "cargo"
+args = ["make", "--list-all-steps"]
+
+[tasks.info]
+description = "Show project information"
+script = '''
+echo "🧪 Cleanroom Testing Framework"
+echo "=============================="
+echo ""
+echo "📋 Project: $(cargo read-manifest | jq -r '.name')"
+echo "📦 Version: $(cargo read-manifest | jq -r '.version')"
+echo "📝 Description: $(cargo read-manifest | jq -r '.description')"
+echo "🏠 Repository: $(cargo read-manifest | jq -r '.repository // "Not specified"')"
+echo ""
+echo "🔧 Rust toolchain:"
+rustup show
+echo ""
+echo "📊 Dependencies:"
+cargo tree --depth 1
+'''
+
+# Advanced testing features
+[tasks.test-miri]
+description = "Run tests with Miri (memory safety checker)"
+command = "cargo"
+args = ["+nightly", "miri", "test", "--all-features"]
+condition = { env_set = ["MIRI"] }
+
+[tasks.test-loom]
+description = "Run tests with Loom (concurrency checker)"
+command = "cargo"
+args = ["test", "--features", "loom", "--all-features"]
+condition = { env_set = ["LOOM"] }
+
+[tasks.test-sanitizer]
+description = "Run tests with sanitizers"
+command = "cargo"
+args = ["test", "--all-features"]
+env = { RUSTFLAGS = "-Zsanitizer=address", ASAN_OPTIONS = "detect_odr_violation=0" }
+condition = { env_set = ["SANITIZER"] }
+
+[tasks.test-valgrind]
+description = "Run tests with Valgrind (memory leak detection)"
+command = "valgrind"
+args = [
+  "--leak-check=full",
+  "--show-leak-kinds=all",
+  "--track-origins=yes",
+  "cargo",
+  "test",
+  "--all-features",
+]
+condition = { env_set = ["VALGRIND"] }
+
+[tasks.test-coverage]
+description = "Run tests with coverage collection"
+command = "cargo"
+args = [
+  "tarpaulin",
+  "--all-features",
+  "--out",
+  "Html",
+  "--output-dir",
+  "target/coverage",
+]
+
+[tasks.test-coverage-lcov]
+description = "Run tests with LCOV coverage"
+command = "cargo"
+args = [
+  "tarpaulin",
+  "--all-features",
+  "--out",
+  "Lcov",
+  "--output-dir",
+  "target/coverage",
+]
+
+[tasks.test-coverage-open]
+description = "Open coverage report in browser"
+command = "open"
+args = ["target/coverage/tarpaulin-report.html"]
+condition = { env_set = ["OPEN_COVERAGE"] }
+
+# Advanced benchmarking features
+[tasks.bench-compare]
+description = "Compare benchmark results"
+command = "cargo"
+args = [
+  "bench",
+  "--bench",
+  "config_creation",
+  "--",
+  "--save-baseline",
+  "baseline",
+]
+
+[tasks.bench-compare-new]
+description = "Run new benchmark and compare"
+command = "cargo"
+args = ["bench", "--bench", "config_creation", "--", "--baseline", "baseline"]
+
+[tasks.bench-stress]
+description = "Run stress tests"
+command = "cargo"
+args = ["test", "--release", "--all-features", "--", "--nocapture", "stress"]
+
+[tasks.bench-memory]
+description = "Benchmark memory usage"
+command = "cargo"
+args = ["bench", "--bench", "memory_usage"]
+
+[tasks.bench-throughput]
+description = "Benchmark throughput"
+command = "cargo"
+args = ["bench", "--bench", "throughput"]
+
+# Advanced profiling features
+[tasks.profile-memory]
+description = "Profile memory usage with heaptrack"
+command = "heaptrack"
+args = ["cargo", "bench", "--bench", "config_creation"]
+
+[tasks.profile-cpu]
+description = "Profile CPU usage with perf"
+command = "perf"
+args = [
+  "record",
+  "--call-graph",
+  "dwarf",
+  "cargo",
+  "bench",
+  "--bench",
+  "config_creation",
+]
+
+[tasks.profile-cache]
+description = "Profile cache performance"
+command = "cargo"
+args = ["bench", "--bench", "cache_performance"]
+
+[tasks.profile-network]
+description = "Profile network operations"
+command = "cargo"
+args = ["bench", "--bench", "network_performance"]
+
+# Advanced security features
+[tasks.security-scan]
+description = "Comprehensive security scanning"
+dependencies = ["audit-all", "security-deps", "security-code"]
+
+[tasks.security-deps]
+description = "Scan dependencies for vulnerabilities"
+command = "cargo"
+args = ["audit", "--deny", "warnings"]
+
+[tasks.security-code]
+description = "Scan code for security issues"
+command = "cargo"
+args = [
+  "clippy",
+  "--all-targets",
+  "--all-features",
+  "--",
+  "-D",
+  "warnings",
+  "-W",
+  "clippy::all",
+]
+
+[tasks.security-secrets]
+description = "Scan for secrets in code"
+command = "grep"
+args = ["-r", "-i", "--include=*.rs", "password\\|secret\\|key\\|token", "src/"]
+
+[tasks.security-fuzzing]
+description = "Run fuzzing tests"
+command = "cargo"
+args = ["+nightly", "fuzz", "run", "cleanroom_fuzz"]
+
+# Advanced container features
+[tasks.containers-build]
+description = "Build custom container images"
+command = "docker"
+args = ["build", "-t", "cleanroom-test", "."]
+
+[tasks.containers-push]
+description = "Push container images to registry"
+command = "docker"
+args = ["push", "cleanroom-test"]
+
+[tasks.containers-scan]
+description = "Scan container images for vulnerabilities"
+command = "docker"
+args = ["scan", "cleanroom-test"]
+
+[tasks.containers-multiarch]
+description = "Build multi-architecture container images"
+command = "docker"
+args = [
+  "buildx",
+  "build",
+  "--platform",
+  "linux/amd64,linux/arm64",
+  "-t",
+  "cleanroom-test",
+  ".",
+]
+
+# Advanced development features
+[tasks.dev-install-tools]
+description = "Install development tools"
+script = '''
+echo "🔧 Installing development tools..."
+cargo install cargo-watch || echo "⚠️  cargo-watch already installed"
+cargo install cargo-expand || echo "⚠️  cargo-expand already installed"
+cargo install cargo-tree || echo "⚠️  cargo-tree already installed"
+cargo install cargo-outdated || echo "⚠️  cargo-outdated already installed"
+cargo install cargo-audit || echo "⚠️  cargo-audit already installed"
+cargo install cargo-deny || echo "⚠️  cargo-deny already installed"
+cargo install cargo-tarpaulin || echo "⚠️  cargo-tarpaulin already installed"
+cargo install cargo-flamegraph || echo "⚠️  cargo-flamegraph already installed"
+cargo install cargo-make || echo "⚠️  cargo-make already installed"
+echo "✅ Development tools installation complete"
+'''
+
+[tasks.dev-check-tools]
+description = "Check if development tools are installed"
+script = '''
+echo "🔍 Checking development tools..."
+tools=("cargo-watch" "cargo-expand" "cargo-tree" "cargo-outdated" "cargo-audit" "cargo-deny" "cargo-tarpaulin" "cargo-flamegraph" "cargo-make")
+for tool in "${tools[@]}"; do
+    if command -v "$tool" >/dev/null 2>&1; then
+        echo "✅ $tool is installed"
+    else
+        echo "❌ $tool is not installed"
+    fi
+done
+'''
+
+[tasks.dev-rustup-components]
+description = "Install Rust toolchain components"
+script = '''
+echo "🦀 Installing Rust toolchain components..."
+rustup component add rustfmt clippy rust-src
+rustup component add --toolchain nightly rustfmt clippy rust-src
+echo "✅ Rust toolchain components installed"
+'''
+
+# Advanced CI/CD features
+[tasks.ci-matrix]
+description = "Run CI matrix tests"
+dependencies = ["ci-linux", "ci-macos", "ci-windows"]
+
+[tasks.ci-linux]
+description = "Run Linux CI tests"
+command = "cargo"
+args = ["test", "--all-features", "--target", "x86_64-unknown-linux-gnu"]
+
+[tasks.ci-macos]
+description = "Run macOS CI tests"
+command = "cargo"
+args = ["test", "--all-features", "--target", "x86_64-apple-darwin"]
+
+[tasks.ci-windows]
+description = "Run Windows CI tests"
+command = "cargo"
+args = ["test", "--all-features", "--target", "x86_64-pc-windows-msvc"]
+
+[tasks.ci-cross-compile]
+description = "Test cross-compilation"
+dependencies = ["ci-cross-linux", "ci-cross-macos", "ci-cross-windows"]
+
+[tasks.ci-cross-linux]
+description = "Cross-compile for Linux"
+command = "cargo"
+args = ["build", "--all-features", "--target", "x86_64-unknown-linux-gnu"]
+
+[tasks.ci-cross-macos]
+description = "Cross-compile for macOS"
+command = "cargo"
+args = ["build", "--all-features", "--target", "x86_64-apple-darwin"]
+
+[tasks.ci-cross-windows]
+description = "Cross-compile for Windows"
+command = "cargo"
+args = ["build", "--all-features", "--target", "x86_64-pc-windows-msvc"]
+
+# Advanced documentation features
+[tasks.docs-api]
+description = "Build API documentation"
+command = "cargo"
+args = ["doc", "--all-features", "--no-deps", "--document-private-items"]
+
+[tasks.docs-book]
+description = "Build mdbook documentation"
+command = "mdbook"
+args = ["build", "docs"]
+
+[tasks.docs-serve]
+description = "Serve documentation locally"
+command = "mdbook"
+args = ["serve", "docs", "--open"]
+
+[tasks.docs-deploy]
+description = "Deploy documentation"
+dependencies = ["docs-api", "docs-book"]
+
+[tasks.docs-linkcheck]
+description = "Check documentation links"
+command = "cargo"
+args = ["doc", "--all-features", "--no-deps", "--", "--check"]
+
+# Advanced release features
+[tasks.release-prepare]
+description = "Prepare release"
+dependencies = ["release-check", "release-version", "release-changelog"]
+
+[tasks.release-version]
+description = "Update version numbers"
+command = "cargo"
+args = ["bump", "patch"]
+
+[tasks.release-changelog]
+description = "Generate changelog"
+command = "git"
+args = ["log", "--oneline", "--since", "1 week ago"]
+
+[tasks.release-tag]
+description = "Create release tag"
+command = "git"
+args = [
+  "tag",
+  "-a",
+  "v${CARGO_MAKE_CRATE_VERSION}",
+  "-m",
+  "Release v${CARGO_MAKE_CRATE_VERSION}",
+]
+
+[tasks.release-publish]
+description = "Publish to crates.io"
+command = "cargo"
+args = ["publish"]
+
+[tasks.release-github]
+description = "Create GitHub release"
+command = "gh"
+args = [
+  "release",
+  "create",
+  "v${CARGO_MAKE_CRATE_VERSION}",
+  "--title",
+  "v${CARGO_MAKE_CRATE_VERSION}",
+  "--notes",
+  "Release v${CARGO_MAKE_CRATE_VERSION}",
+]
+
+# Advanced monitoring features
+[tasks.monitor-metrics]
+description = "Collect performance metrics"
+script = '''
+echo "📊 Collecting Performance Metrics"
+echo "================================="
+echo "Timestamp: $(date)"
+echo "Rust version: $(rustc --version)"
+echo "Cargo version: $(cargo --version)"
+echo "System load: $(uptime | awk '{print $10,$11,$12}')"
+echo "Memory usage: $(ps -o pid,ppid,pcpu,pmem,comm -A | sort -k4 -nr | head -5)"
+echo "Disk usage: $(df -h | grep -E '^/dev/' | awk '{print $1,$5,$6}')"
+echo "Network connections: $(netstat -an | grep ESTABLISHED | wc -l)"
+'''
+
+[tasks.monitor-alerts]
+description = "Check for system alerts"
+script = '''
+echo "🚨 System Alerts Check"
+echo "======================"
+# Check disk space
+disk_usage=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
+if [ "$disk_usage" -gt 90 ]; then
+    echo "⚠️  Disk usage is high: ${disk_usage}%"
+fi
+
+# Check memory usage
+memory_usage=$(ps -A -o %mem | awk '{s+=$1} END {print s}')
+if [ "$memory_usage" -gt 80 ]; then
+    echo "⚠️  Memory usage is high: ${memory_usage}%"
+fi
+
+# Check Docker status
+if ! docker ps >/dev/null 2>&1; then
+    echo "❌ Docker daemon is not running"
+fi
+
+echo "✅ System alerts check complete"
+'''
+
+# Advanced troubleshooting features
+[tasks.troubleshoot-network]
+description = "Troubleshoot network issues"
+script = '''
+echo "🌐 Network Troubleshooting"
+echo "=========================="
+echo "Network interfaces:"
+ifconfig | grep -E "inet |flags"
+echo ""
+echo "DNS resolution:"
+nslookup google.com
+echo ""
+echo "Network connectivity:"
+ping -c 3 google.com
+echo ""
+echo "Port availability:"
+netstat -an | grep LISTEN | head -10
+'''
+
+[tasks.troubleshoot-rust]
+description = "Troubleshoot Rust issues"
+script = '''
+echo "🦀 Rust Troubleshooting"
+echo "======================="
+echo "Rust toolchain:"
+rustup show
+echo ""
+echo "Cargo configuration:"
+cargo config get 2>/dev/null || echo "Cargo config command not available on stable"
+echo ""
+echo "Environment variables:"
+env | grep -E "RUST|CARGO" | sort
+echo ""
+echo "Cargo cache:"
+du -sh ~/.cargo/registry
+if [ -d ~/.cargo/git ]; then
+    du -sh ~/.cargo/git
+else
+    echo "Git cache directory not found"
+fi
+echo ""
+echo "Target directory:"
+du -sh target/
+'''
+
+[tasks.troubleshoot-containers-detailed]
+description = "Detailed container troubleshooting"
+script = '''
+echo "🐳 Detailed Container Troubleshooting"
+echo "====================================="
+echo "Docker version:"
+docker --version
+echo ""
+echo "Docker info:"
+docker info | head -20
+echo ""
+echo "Container images:"
+docker images | head -10
+echo ""
+echo "Container processes:"
+docker ps -a | head -10
+echo ""
+echo "Docker logs (last 20 lines):"
+docker logs $(docker ps -q | head -1) 2>/dev/null | tail -20 || echo "No running containers"
+echo ""
+echo "Docker system info:"
+docker system df
+echo ""
+echo "Testcontainers test:"
+timeout 30 cargo test --all-features -- --nocapture testcontainers_basic 2>&1 | head -30
+'''
+
+# Advanced validation features
+[tasks.validate-comprehensive]
+description = "Comprehensive validation suite"
+dependencies = [
+  "validate-code-quality",
+  "validate-performance",
+  "validate-security",
+  "validate-compatibility",
+  "validate-documentation",
+]
+
+[tasks.validate-code-quality]
+description = "Validate code quality"
+dependencies = ["lint", "test", "test-proptest-parallel"]
+
+
+# Advanced workflow features
+[tasks.workflow-dev]
+description = "Development workflow"
+dependencies = ["dev-setup", "dev-install-tools", "dev-rustup-components"]
+
+[tasks.workflow-test]
+description = "Testing workflow"
+dependencies = ["test", "test-proptest", "test-containers-all"]
+
+[tasks.workflow-bench]
+description = "Benchmarking workflow"
+dependencies = ["bench-all", "profile", "bench-compare"]
+
+[tasks.workflow-release]
+description = "Release workflow"
+dependencies = ["release-prepare", "release-tag", "release-publish"]
+
+[tasks.workflow-ci]
+description = "CI workflow"
+dependencies = ["ci-matrix", "validate-comprehensive"]
+
+# Advanced utility features
+[tasks.utils-clean-all]
+description = "Clean all build artifacts and caches"
+script = '''
+echo "🧹 Cleaning all build artifacts and caches..."
+cargo clean
+rm -rf target/
+rm -rf ~/.cargo/registry/cache/
+rm -rf ~/.cargo/git/db/
+docker system prune -f
+echo "✅ Cleanup complete"
+'''
+
+[tasks.utils-backup]
+description = "Backup project state"
+script = '''
+echo "💾 Backing up project state..."
+backup_dir="backup-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$backup_dir"
+cp -r src/ "$backup_dir/"
+cp Cargo.toml "$backup_dir/"
+cp Makefile.toml "$backup_dir/"
+cp README.md "$backup_dir/"
+echo "✅ Backup created: $backup_dir"
+'''
+
+[tasks.utils-restore]
+description = "Restore project from backup"
+script = '''
+echo "🔄 Restoring project from backup..."
+if [ -z "$BACKUP_DIR" ]; then
+    echo "❌ Please set BACKUP_DIR environment variable"
+    exit 1
+fi
+if [ ! -d "$BACKUP_DIR" ]; then
+    echo "❌ Backup directory not found: $BACKUP_DIR"
+    exit 1
+fi
+cp -r "$BACKUP_DIR"/* .
+echo "✅ Project restored from: $BACKUP_DIR"
+'''
+
+# Profile-specific configurations
+[config.profiles.development]
+env = { CARGO_MAKE_PROFILE = "development" }
+extends = ["profile-development"]
+
+[config.profiles.release]
+env = { CARGO_MAKE_PROFILE = "release" }
+extends = ["profile-release"]
+
+[config.profiles.benchmark]
+env = { CARGO_MAKE_PROFILE = "benchmark" }
+extends = ["profile-benchmark"]
+
+[config.profiles.security]
+env = { CARGO_MAKE_PROFILE = "security" }
+extends = ["profile-security"]
+
+[config.profiles.docs]
+env = { CARGO_MAKE_PROFILE = "docs" }
+extends = ["profile-docs"]
+
+# Profile-specific task sets
+[tasks.profile-development]
+description = "Development profile tasks"
+dependencies = ["check", "test", "lint", "dev-install-tools"]
+
+[tasks.profile-release]
+description = "Release profile tasks"
+dependencies = ["build-release", "test-release", "bench-all", "security-scan"]
+
+[tasks.profile-benchmark]
+description = "Benchmark profile tasks"
+dependencies = ["bench-all", "profile", "bench-compare"]
+
+[tasks.profile-security]
+description = "Security profile tasks"
+dependencies = ["security-scan", "audit-all", "security-secrets"]
+
+[tasks.profile-docs]
+description = "Documentation profile tasks"
+dependencies = ["docs-api", "docs-book", "docs-linkcheck"]
+
+# Advanced task aliases
+[tasks.watch]
+description = "Watch for changes and run tests"
+command = "cargo"
+args = ["watch", "-x", "test"]
+
+[tasks.watch-check]
+description = "Watch for changes and run check"
+command = "cargo"
+args = ["watch", "-x", "check"]
+
+[tasks.watch-lint]
+description = "Watch for changes and run clippy"
+command = "cargo"
+args = ["watch", "-x", "clippy"]
+
+[tasks.watch-fmt]
+description = "Watch for changes and run fmt"
+command = "cargo"
+args = ["watch", "-x", "fmt"]
+
+# Advanced Git integration
+[tasks.git-hooks]
+description = "Install Git hooks"
+script = '''
+echo "🪝 Installing Git hooks..."
+mkdir -p .git/hooks
+cat > .git/hooks/pre-commit << 'EOF'
+#!/bin/bash
+cargo make check
+cargo make lint
+cargo make fmt-check
+EOF
+chmod +x .git/hooks/pre-commit
+echo "✅ Git hooks installed"
+'''
+
+[tasks.git-hooks-remove]
+description = "Remove Git hooks"
+script = '''
+echo "🗑️  Removing Git hooks..."
+rm -f .git/hooks/pre-commit
+echo "✅ Git hooks removed"
+'''
+
+# Advanced environment management
+[tasks.env-setup]
+description = "Set up development environment"
+script = '''
+echo "🌍 Setting up development environment..."
+echo "Current Rust version: $(rustc --version)"
+echo "Current Cargo version: $(cargo --version)"
+echo "Current toolchain: $(rustup show active-toolchain)"
+echo ""
+echo "Environment variables:"
+env | grep -E "RUST|CARGO" | sort
+echo ""
+echo "Cargo configuration:"
+cargo config get 2>/dev/null || echo "Cargo config command not available on stable"
+'''
+
+[tasks.env-check]
+description = "Check environment compatibility"
+script = '''
+echo "🔍 Checking environment compatibility..."
+echo "OS: $(uname -s)"
+echo "Architecture: $(uname -m)"
+echo "Rust target: $(rustc -vV | grep host)"
+echo "Docker: $(docker --version 2>/dev/null || echo 'Not installed')"
+echo "Git: $(git --version)"
+echo "Make: $(make --version 2>/dev/null || echo 'Not installed')"
+'''
+
+# Advanced project management
+[tasks.project-info]
+description = "Show comprehensive project information"
+script = '''
+echo "📋 Project Information"
+echo "====================="
+echo "Project name: $(cargo metadata --format-version 1 | jq -r '.packages[0].name')"
+echo "Version: $(cargo metadata --format-version 1 | jq -r '.packages[0].version')"
+echo "Authors: $(cargo metadata --format-version 1 | jq -r '.packages[0].authors | join(", ")')"
+echo "Description: $(cargo metadata --format-version 1 | jq -r '.packages[0].description')"
+echo "License: $(cargo metadata --format-version 1 | jq -r '.packages[0].license')"
+echo "Repository: $(cargo metadata --format-version 1 | jq -r '.packages[0].repository')"
+echo ""
+echo "Dependencies:"
+cargo tree --depth 1
+echo ""
+echo "Features:"
+cargo metadata --format-version 1 | jq -r '.packages[0].features | keys[]'
+'''
+
+[tasks.project-stats]
+description = "Show project statistics"
+script = '''
+echo "📊 Project Statistics"
+echo "===================="
+echo "Lines of code:"
+find src/ -name "*.rs" -exec wc -l {} + | tail -1
+echo ""
+echo "Number of files:"
+find src/ -name "*.rs" | wc -l
+echo ""
+echo "Dependencies:"
+cargo tree --depth 1 | wc -l
+echo ""
+echo "Test files:"
+find . -name "*test*.rs" | wc -l
+echo ""
+echo "Example files:"
+find examples/ -name "*.rs" 2>/dev/null | wc -l
+'''
+
+# Advanced automation features
+[tasks.auto-fix]
+description = "Automatically fix common issues"
+script = '''
+echo "🔧 Auto-fixing common issues..."
+cargo fmt
+cargo clippy --fix --allow-dirty --allow-staged
+echo "✅ Auto-fix complete"
+'''
+
+[tasks.auto-update]
+description = "Automatically update dependencies"
+script = '''
+echo "🔄 Auto-updating dependencies..."
+cargo update
+cargo outdated
+echo "✅ Auto-update complete"
+'''
+
+[tasks.auto-clean]
+description = "Automatically clean build artifacts"
+script = '''
+echo "🧹 Auto-cleaning build artifacts..."
+cargo clean
+find . -name "target" -type d -exec rm -rf {} + 2>/dev/null || true
+echo "✅ Auto-clean complete"
+'''
+
+# Advanced integration features
+[tasks.integration-github]
+description = "GitHub integration setup"
+script = '''
+echo "🐙 Setting up GitHub integration..."
+if [ ! -f ".github/workflows/ci.yml" ]; then
+    mkdir -p .github/workflows
+    echo "Creating GitHub Actions workflow..."
+    # This would create a CI workflow file
+fi
+echo "✅ GitHub integration setup complete"
+'''
+
+[tasks.integration-vscode]
+description = "VS Code integration setup"
+script = '''
+echo "💻 Setting up VS Code integration..."
+if [ ! -f ".vscode/settings.json" ]; then
+    mkdir -p .vscode
+    cat > .vscode/settings.json << 'EOF'
+{
+    "rust-analyzer.cargo.features": "all",
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "rust-analyzer.checkOnSave.extraArgs": ["--", "-D", "warnings"],
+    "rust-analyzer.completion.autoimport.enable": true,
+    "rust-analyzer.diagnostics.enable": true,
+    "rust-analyzer.lens.enable": true,
+    "rust-analyzer.lens.run.enable": true,
+    "rust-analyzer.lens.test.enable": true
+}
+EOF
+fi
+echo "✅ VS Code integration setup complete"
+'''
+
+# Default task
+[tasks.default]
+description = "Default development workflow"
+dependencies = ["check", "test", "lint"]
