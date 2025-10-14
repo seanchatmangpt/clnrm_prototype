@@ -181,7 +181,7 @@ async fn test_policy_enforcement() -> Result<(), Box<dyn std::error::Error>> {
 
     // Given: A cleanroom environment with security policy enabled
     let mut config = CleanroomConfig::default();
-    config.enable_security_policy = true;
+    config.security_policy = clnrm::policy::SecurityPolicy::default();
     let environment = CleanroomEnvironment::new(config).await?;
     context.set_environment(Arc::new(environment));
 

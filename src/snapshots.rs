@@ -1,10 +1,4 @@
-//! Snapshot testing for cleanroom testing
-//!
-//! This module provides snapshot testing following core team best practices:
-//! - Snapshot capture and comparison
-//! - Snapshot management
-//! - Snapshot validation
-//! - Snapshot reporting
+//! Snapshot testing for test output comparison (advanced feature).
 
 #![allow(dead_code)]
 
@@ -30,7 +24,7 @@ pub struct SnapshotManager {
 }
 
 /// Snapshot data structure
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotData {
     /// Session ID
     pub session_id: Uuid,
@@ -45,7 +39,7 @@ pub struct SnapshotData {
 }
 
 /// Snapshot structure
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Snapshot {
     /// Snapshot name
     pub name: String,
@@ -133,7 +127,7 @@ pub enum SnapshotValidationStatus {
 }
 
 /// Snapshot statistics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotStatistics {
     /// Total snapshots
     pub total_snapshots: u32,
@@ -492,7 +486,7 @@ impl SnapshotData {
 }
 
 /// Snapshot report
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotReport {
     /// Session ID
     pub session_id: Uuid,
@@ -523,7 +517,7 @@ impl SnapshotReport {
 }
 
 /// Snapshot summary
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotSummary {
     /// Snapshot name
     pub name: String,

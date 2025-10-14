@@ -1,16 +1,4 @@
-//! RAII guards for resource management
-//!
-//! This module provides RAII (Resource Acquisition Is Initialization) guards
-//! that ensure proper cleanup of resources even in the case of panics or early returns.
-//!
-//! # Example
-//!
-//! ```rust
-//! use crate::cleanroom::guards::{ContainerGuard, ResourceGuard};
-//!
-//! let guard = ContainerGuard::new(container);
-//! // Automatic cleanup on drop, even on panic
-//! ```
+//! RAII guards for automatic resource cleanup (internal implementation).
 
 use crate::error::Result;
 use crate::cleanroom::CleanroomEnvironment;

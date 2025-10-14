@@ -10,7 +10,7 @@ use std::time::{Duration, Instant};
 use testcontainers::{core::ExecCommand, runners::SyncRunner, GenericImage, ImageExt};
 
 /// Testcontainers backend for containerized execution
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TestcontainerBackend {
     /// Base image configuration
     image_name: String,

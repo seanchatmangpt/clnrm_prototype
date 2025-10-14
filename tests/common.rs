@@ -440,7 +440,11 @@ pub mod generators {
                     enable_coverage_tracking: enable_coverage,
                     enable_snapshot_testing: enable_snapshots,
                     enable_tracing: enable_tracing,
-                    enable_security_policy: enable_security,
+                    security_policy: if enable_security { 
+                        clnrm::policy::SecurityPolicy::default() 
+                    } else { 
+                        clnrm::policy::SecurityPolicy::default() 
+                    },
                     ..CleanroomConfig::default()
                 },
             )

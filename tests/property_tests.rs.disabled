@@ -63,18 +63,24 @@ proptest! {
         enable_port_scanning in any::<bool>(),
         enable_file_system_isolation in any::<bool>(),
     ) {
-        let mut policy = Policy::with_security_level(security_level.clone());
-        policy.security.enable_network_isolation = enable_network_isolation;
-        policy.security.enable_filesystem_isolation = enable_file_system_isolation;
+        let policy = Policy {
+            security_level: security_level.clone(),
+            network: NetworkPolicy {
+                enable_network_isolation,
+                enable_port_scanning,
+                enable_file_system_isolation,
+            },
+            ..Policy::default()
+        };
 
         // Policy should always be valid
         prop_assert!(policy.validate().is_ok());
 
         // Security level should match
-        prop_assert_eq!(policy.security.security_level, security_level);
+        prop_assert_eq!(policy.security_level, security_level);
 
         // Network isolation should be consistent
-        prop_assert_eq!(policy.security.enable_network_isolation, enable_network_isolation);
+        prop_assert_eq!(policy.network.enable_network_isolation, enable_network_isolation);
 
         // Summary should contain security level
         let summary = policy.summary();
@@ -91,23 +97,25 @@ proptest! {
         max_disk_mb in 1..8192u32,
         max_network_mb in 1..1024u32,
     ) {
-        let mut limits = ResourceLimits::default();
-        limits.memory.max_usage_bytes = (max_memory_mb as u64) * 1024 * 1024;
-        limits.cpu.max_usage_percent = max_cpu_percent;
-        limits.disk.max_usage_bytes = (max_disk_mb as u64) * 1024 * 1024;
-        limits.network.max_bandwidth_bytes_per_sec = (max_network_mb as u64) * 1024 * 1024;
+        let limits = ResourceLimits {
+            max_memory_mb: max_memory_mb as usize,
+            max_cpu_percent,
+            max_disk_mb: max_disk_mb as usize,
+            max_network_mb: max_network_mb as usize,
+            ..ResourceLimits::default()
+        };
 
         // Limits should always validate with positive values
         prop_assert!(limits.validate().is_ok());
 
         // All values should be positive
-        prop_assert!(limits.memory.max_usage_bytes > 0);
-        prop_assert!(limits.cpu.max_usage_percent > 0.0);
-        prop_assert!(limits.disk.max_usage_bytes > 0);
-        prop_assert!(limits.network.max_bandwidth_bytes_per_sec > 0);
+        prop_assert!(limits.max_memory_mb > 0);
+        prop_assert!(limits.max_cpu_percent > 0.0);
+        prop_assert!(limits.max_disk_mb > 0);
+        prop_assert!(limits.max_network_mb > 0);
 
         // CPU percentage should not exceed 100%
-        prop_assert!(limits.cpu.max_usage_percent <= 100.0);
+        prop_assert!(limits.max_cpu_percent <= 100.0);
     }
 }
 
@@ -119,16 +127,20 @@ proptest! {
         key1 in "[a-zA-Z0-9_]{1,50}",
         key2 in "[a-zA-Z0-9_]{1,50}",
     ) {
-        let manager = DeterministicManager::new(seed);
+        let manager = DeterministicManager::new();
+        manager.set_seed(seed);
 
-        // Same seed should produce same results (using async methods)
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let value1 = rt.block_on(manager.random());
-        let value2 = rt.block_on(manager.random());
-        // Note: These will be different as they're sequential calls, but deterministic
-        
+        // Same seed should produce same results
+        let value1 = manager.generate_deterministic_value(&key1);
+        let value2 = manager.generate_deterministic_value(&key1);
+        prop_assert_eq!(value1, value2);
+
+        // Different keys should produce different values
+        let value3 = manager.generate_deterministic_value(&key2);
+        prop_assert_ne!(value1, value3);
+
         // Seed should be preserved
-        prop_assert_eq!(manager.seed(), seed);
+        prop_assert_eq!(manager.get_current_seed(), seed);
     }
 }
 
@@ -139,28 +151,35 @@ proptest! {
         test_names in prop::collection::vec("[a-zA-Z0-9_]{1,20}", 1..10),
         line_numbers in prop::collection::vec(1..1000usize, 1..20),
     ) {
-        let session_id = Uuid::new_v4();
-        let tracker = CoverageTracker::new(session_id);
+        let tracker = CoverageTracker::new();
 
-        // Start collection
-        let mut tracker = tracker;
-        tracker.start_collection().unwrap();
-
-        // Update coverage data for each test
         for (i, test_name) in test_names.iter().enumerate() {
-            tracker.update_coverage_data(|data| {
-                data.add_file(test_name.clone(), 100, 80 + (i * 5));
-            }).unwrap();
+            tracker.start_test(test_name);
+
+            // Record some line executions
+            for line_num in &line_numbers[..std::cmp::min(line_numbers.len(), 5)] {
+                tracker.record_line_execution(test_name, *line_num);
+            }
+
+            // End test (alternate between success and failure)
+            let success = i % 2 == 0;
+            tracker.end_test(test_name, success);
         }
 
-        let report = tracker.stop_collection().unwrap();
+        let report = tracker.get_report();
 
-        // Coverage should be reasonable
-        prop_assert!(report.overall_coverage_percentage >= 0.0);
-        prop_assert!(report.overall_coverage_percentage <= 100.0);
+        // Total tests should match input
+        prop_assert_eq!(report.total_tests, test_names.len());
 
-        // Should have coverage files
-        prop_assert!(report.coverage_files.len() > 0);
+        // Passed tests should be half (rounded up)
+        prop_assert_eq!(report.passed_tests, (test_names.len() + 1) / 2);
+
+        // Failed tests should be half (rounded down)
+        prop_assert_eq!(report.failed_tests, test_names.len() / 2);
+
+        // Coverage should be calculated correctly
+        prop_assert!(report.coverage_percentage >= 0.0);
+        prop_assert!(report.coverage_percentage <= 100.0);
     }
 }
 

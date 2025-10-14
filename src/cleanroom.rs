@@ -1,45 +1,15 @@
 //! # Core Cleanroom Environment
 //!
-//! This module provides the core `CleanroomEnvironment` implementation, which serves as the
-//! main orchestrator for hermetic testing environments. It manages container lifecycle,
-//! metrics collection, resource monitoring, and concurrent task execution.
+//! This module provides the main `CleanroomEnvironment` for hermetic testing.
 //!
 //! ## Overview
 //!
-//! The `CleanroomEnvironment` is the central component that:
-//!
-//! - **Orchestrates Container Lifecycle**: Manages container creation, execution, and cleanup
-//! - **Collects Metrics**: Tracks performance, resource usage, and test execution statistics
-//! - **Manages Resources**: Monitors and limits CPU, memory, disk, and network usage
-//! - **Coordinates Concurrency**: Handles concurrent task execution with structured concurrency
-//! - **Provides Health Monitoring**: Monitors system health and provides status information
-//!
-//! ## Key Features
+//! The `CleanroomEnvironment` provides:
 //!
 //! - **🔒 Hermetic Isolation**: Complete isolation from the host system
-//! - **📊 Comprehensive Metrics**: Detailed performance and resource metrics
-//! - **🔄 Container Management**: Singleton pattern for efficient container reuse
-//! - **⚡ Concurrent Execution**: Structured concurrency with task orchestration
-//! - **🛡️ Resource Monitoring**: Real-time resource usage tracking
-//! - **🏥 Health Checks**: System health monitoring and status reporting
+//! - **📊 Metrics Collection**: Track test execution and performance
+//! - **🛡️ Security Policies**: Configurable isolation and resource limits
 //! - **🧹 Automatic Cleanup**: RAII-based resource cleanup
-
-//!
-//! ## Architecture
-//!
-//! ```text
-//! ┌─────────────────────────────────────────────────────────────┐
-//! │                CleanroomEnvironment                        │
-//! │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐   │
-//! │  │   Backend   │  │   Metrics    │  │   Orchestrator  │   │
-//! │  │ Management  │  │ Collection  │  │   (Concurrency) │   │
-//! │  └─────────────┘  └─────────────┘  └─────────────────┘   │
-//! │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐   │
-//! │  │ Container   │  │   Health    │  │   Services      │   │
-//! │  │ Registry    │  │ Monitoring  │  │   Manager       │   │
-//! │  └─────────────┘  └─────────────┘  └─────────────────┘   │
-//! └─────────────────────────────────────────────────────────────┘
-//! ```
 //!
 //! ## Usage Examples
 //!
@@ -304,7 +274,7 @@ use uuid::Uuid;
 ///     Ok(())
 /// }
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CleanroomEnvironment {
     /// Unique test session identifier
     pub session_id: Uuid,

@@ -8,7 +8,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 /// Serializable wrapper around Instant
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct SerializableInstant(Instant);
+pub struct SerializableInstant(pub Instant);
 
 impl SerializableInstant {
     /// Create a new SerializableInstant from the current time

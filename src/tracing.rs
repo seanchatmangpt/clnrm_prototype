@@ -67,7 +67,7 @@ pub struct TracingManager {
 }
 
 /// Tracing data structure
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TracingData {
     /// Session ID
     pub session_id: Uuid,

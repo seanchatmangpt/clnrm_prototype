@@ -1,15 +1,4 @@
-//! # Lifecycle Management System
-//!
-//! Complete ggen-style lifecycle management for cleanroom environments.
-//! Provides init, test, deploy, validate, and readiness tracking phases.
-//!
-//! ## Features
-//!
-//! - **Project Initialization**: Bootstrap project structure and dependencies
-//! - **Test Execution**: Run tests in cleanroom environments
-//! - **Deployment**: Deploy to dev/staging/production environments
-//! - **Validation**: Validate environment configuration and requirements
-//! - **Readiness Tracking**: Track production readiness with detailed scoring
+//! Advanced lifecycle management for complex deployment scenarios.
 //!
 //! ## Example
 //!

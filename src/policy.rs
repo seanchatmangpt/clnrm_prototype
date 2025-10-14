@@ -1,10 +1,6 @@
-//! Policy enforcement for cleanroom testing
+//! Security and resource policies for cleanroom testing.
 //!
-//! This module provides policy enforcement following core team best practices:
-//! - Security boundaries and isolation
-//! - Resource limits and constraints
-//! - Execution policies and rules
-//! - Compliance and audit trails
+//! Configure isolation, resource limits, and execution rules for hermetic testing.
 
 use crate::error::{CleanroomError, Result};
 use serde::{Deserialize, Serialize};

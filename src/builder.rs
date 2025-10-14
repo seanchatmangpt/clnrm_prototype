@@ -1,22 +1,4 @@
-//! Type-safe builder pattern for Cleanroom configuration
-//!
-//! This module provides a compile-time validated builder API that ensures
-//! configuration correctness through Rust's type system. The typestate pattern
-//! prevents invalid configurations from being constructed.
-//!
-//! # Example
-//!
-//! ```rust
-//! use crate::cleanroom::builder::CleanroomBuilder;
-//! use std::time::Duration;
-//!
-//! let env = CleanroomBuilder::new()
-//!     .with_timeout(Duration::from_secs(30))
-//!     .with_security_policy(SecurityPolicy::locked())
-//!     .with_deterministic_execution(Some(42))
-//!     .build()
-//!     .await?;
-//! ```
+//! Advanced builder pattern for complex configurations (not currently used).
 
 use crate::error::Result;
 use crate::config::CleanroomConfig;
@@ -128,6 +110,15 @@ impl CleanroomBuilder<WithTimeout> {
     /// Configure security policy
     pub fn with_security_policy(mut self, policy: SecurityPolicy) -> CleanroomBuilder<WithSecurity> {
         self.config.security_policy = policy;
+        CleanroomBuilder {
+            config: self.config,
+            _state: std::marker::PhantomData,
+        }
+    }
+
+    /// Enable singleton containers
+    pub fn with_singleton_containers(mut self, enabled: bool) -> CleanroomBuilder<Ready> {
+        self.config.enable_singleton_containers = enabled;
         CleanroomBuilder {
             config: self.config,
             _state: std::marker::PhantomData,
@@ -264,7 +255,7 @@ impl Default for CleanroomBuilder<Initial> {
 impl CleanroomBuilder<Initial> {
     /// Create a secure environment with locked-down policies
     pub fn secure() -> CleanroomBuilder<WithSecurity> {
-        Self::new().with_security_policy(SecurityPolicy::with_security_level(clnrm::SecurityLevel::Locked))
+        Self::new().with_security_policy(SecurityPolicy::with_security_level(crate::policy::SecurityLevel::Locked))
     }
 
     /// Create a high-performance environment with optimized settings

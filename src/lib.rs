@@ -9,39 +9,17 @@
 //! ## Overview
 //!
 //! Cleanroom provides a unified API for running commands and tests in completely isolated
-//! environments with deterministic results, comprehensive security policies, and support
-//! for multiple container backends (Docker, Podman, Kubernetes).
+//! environments with deterministic results and comprehensive security policies.
 
 #![allow(clippy::get_first)]
 //!
 //! ## Key Features
 //!
 //! - **🔒 Hermetic Execution**: Complete isolation from the host system
-//! - **🎯 Deterministic Results**: Reproducible outputs with seeded randomness
-//! - **🔧 Backend Abstraction**: Unified API across Docker, Podman, and Kubernetes
-//! - **🛡️ Security Policies**: Configurable isolation, resource limits, and compliance
-//! - **📋 Scenario DSL**: Multi-step workflows with assertions and rollback
-//! - **📊 Performance Monitoring**: Built-in metrics collection and analysis
-//! - **🔍 Coverage Tracking**: Test coverage analysis and reporting
-//! - **📸 Snapshot Testing**: Capture and compare test outputs
-//! - **🔐 Attestation**: Cryptographic verification of test environments
-//! - **📈 Observability**: Comprehensive tracing and logging
+//! - **🛡️ Security Policies**: Configurable isolation and resource limits
+//! - **📊 Performance Monitoring**: Built-in metrics collection
+//! - **🔧 Simple API**: Easy-to-use functions for common testing scenarios
 //!
-//! ## Architecture
-//!
-//! ```text
-//! ┌─────────────────────────────────────────────────────────────┐
-//! │                    CleanroomEnvironment                     │
-//! │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐   │
-//! │  │   Backend   │  │   Policy    │  │   Monitoring    │   │
-//! │  │ Abstraction │  │  Engine     │  │    System       │   │
-//! │  └─────────────┘  └─────────────┘  └─────────────────┘   │
-//! │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐   │
-//! │  │ Containers  │  │ Scenarios   │  │   Coverage      │   │
-//! │  │ Management  │  │   DSL       │  │   Tracking      │   │
-//! │  └─────────────┘  └─────────────┘  └─────────────────┘   │
-//! └─────────────────────────────────────────────────────────────┘
-//! ```
 //!
 //! ## Quick Start
 //!
@@ -56,93 +34,30 @@
 //! assert_eq!(result.stdout.trim(), "hello world");
 //! ```
 //!
-//! ### Advanced Usage
+//! ### Environment Setup
 //!
 //! ```no_run
-//! use crate::cleanroom::{
-//!     CleanroomEnvironment, CleanroomConfig, Policy,
-//!     SecurityPolicy, ResourceLimits, Assert
-//! };
+//! use clnrm::{CleanroomEnvironment, CleanroomConfig, Policy};
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     // Create configuration
-//!     let config = CleanroomConfig {
-//!         security: SecurityPolicy {
-//!             enable_network_isolation: true,
-//!             enable_filesystem_isolation: true,
-//!             ..Default::default()
-//!         },
-//!         resources: ResourceLimits {
-//!             max_memory_mb: 512,
-//!             max_cpu_percent: 50.0,
-//!             ..Default::default()
-//!         },
-//!         ..Default::default()
-//!     };
-//!
-//!     // Create environment
+//!     // Create secure configuration
+//!     let config = CleanroomConfig::default();
 //!     let environment = CleanroomEnvironment::new(config).await?;
 //!
 //!     // Execute test
-//!     let result = environment.execute_test("python3 --version").await?;
-//!     result.assert_success().assert_stdout_contains("Python");
+//!     let result = environment.execute_test("my_test", || {
+//!         Ok::<i32, clnrm::Error>(42)
+//!     }).await?;
+//!
+//!     // Get metrics
+//!     let metrics = environment.get_metrics().await;
+//!     println!("Tests executed: {}", metrics.tests_executed);
 //!
 //!     // Clean up
 //!     environment.cleanup().await?;
 //!     Ok(())
 //! }
-//! ```
-//!
-//! ### Scenario Execution
-//!
-//! ```no_run
-//! use crate::cleanroom::{scenario, CleanroomEnvironment, CleanroomConfig};
-//!
-//! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let config = CleanroomConfig::default();
-//!     let environment = CleanroomEnvironment::new(config).await?;
-//!
-//!     // Create scenario
-//!     let scenario = scenario("python_test")
-//!         .step("install_deps", ["pip", "install", "requests"])
-//!         .step("run_test", ["python", "test.py"])
-//!         .step("cleanup", ["pip", "uninstall", "requests", "-y"]);
-//!
-//!     // Execute scenario
-//!     let result = environment.execute_scenario(&scenario).await?;
-//!
-//!     // Check results
-//!     for step in result.steps {
-//!         println!("Step {}: {}", step.name, if step.success { "PASSED" } else { "FAILED" });
-//!     }
-//!
-//!     environment.cleanup().await?;
-//!     Ok(())
-//! }
-//! ```
-//!
-//! ### Security Policies
-//!
-//! ```no_run
-//! use crate::cleanroom::{run_with_policy, Policy, SecurityPolicy};
-//!
-//! // Create restrictive security policy
-//! let policy = Policy {
-//!     security: SecurityPolicy {
-//!         enable_network_isolation: true,
-//!         enable_filesystem_isolation: true,
-//!         blocked_commands: vec!["rm".to_string(), "format".to_string()],
-//!         allowed_ports: vec![80, 443],
-//!         ..Default::default()
-//!     },
-//!     ..Default::default()
-//! };
-//!
-//! // Execute with policy
-//! let result = run_with_policy(["echo", "safe command"], &policy)?;
-//! assert!(result.success());
 //! ```
 //!
 //! ## Backend Support
@@ -275,7 +190,7 @@ pub mod runtime;
 pub mod scenario;
 pub mod serializable_instant;
 pub mod snapshots;
-pub mod streaming;
+// pub mod streaming; // Temporarily disabled due to compilation issues
 pub mod test_utils;
 pub mod tracing;
 
@@ -310,7 +225,7 @@ pub use policy::{Policy, SecurityLevel};
 pub use report::TestReport;
 pub use scenario::{scenario, RunResult, Scenario};
 pub use snapshots::SnapshotManager;
-pub use streaming::{ArtifactStream, StreamingCollector, ArtifactData, ArtifactMetadata, ArtifactType};
+// pub use streaming::{ArtifactStream, StreamingCollector, ArtifactData, ArtifactMetadata, ArtifactType}; // Temporarily disabled
 pub use test_utils::{TestContainerHelper, TestEnvironmentBuilder};
 pub use tracing::TracingManager;
 

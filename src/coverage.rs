@@ -1,4 +1,4 @@
-//! Coverage collection for cleanroom testing
+//! Test coverage collection (advanced feature).
 
 use crate::error::Result;
 use crate::report::CoverageData;

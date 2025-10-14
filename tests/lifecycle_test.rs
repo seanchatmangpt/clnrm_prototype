@@ -1,7 +1,9 @@
 //! Integration tests for lifecycle management system
 
-use clnrm::CleanroomConfig;
-use clnrm::CleanroomEnvironment;
+use clnrm::{
+    CleanroomConfig, CleanroomEnvironment, 
+    lifecycle::{LifecycleConfig, LifecycleManager}
+};
 use std::sync::Arc;
 use tempfile::TempDir;
 

@@ -1,9 +1,4 @@
-//! Attestation and provenance for deterministic test execution
-//!
-//! Provides cryptographic attestation of test execution including
-//! image digests, SBOM, policy profiles, and execution provenance.
-//!
-//! WIP: Implement attestation and provenance generation
+//! Cryptographic attestation for test execution (advanced feature).
 
 use crate::error::Result;
 use serde::{Deserialize, Serialize};

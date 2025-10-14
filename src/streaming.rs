@@ -1,17 +1,7 @@
-//! Zero-copy streaming for artifacts
+//! Advanced streaming APIs for high-performance artifact collection.
 //!
-//! This module provides streaming APIs for artifacts without modifying existing types,
-//! using zero-copy techniques to minimize memory allocations and improve performance.
-//!
-//! # Example
-//!
-//! ```rust
-//! use crate::cleanroom::streaming::{ArtifactStream, StreamingCollector};
-//!
-//! let stream = ArtifactStream::new(environment);
-//! let collector = StreamingCollector::with_zero_copy();
-//! stream.collect_into(collector).await?;
-//! ```
+//! **Note**: This is an advanced feature. Most users should use the standard
+//! `CleanroomEnvironment` API instead.
 
 use crate::error::Result;
 use crate::cleanroom::CleanroomEnvironment;

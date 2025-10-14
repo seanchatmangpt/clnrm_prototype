@@ -1,7 +1,4 @@
-//! Runtime execution environment
-//!
-//! Provides runtime execution capabilities including command execution,
-//! timeout handling, resource management, and structured concurrency.
+//! Runtime execution environment (internal implementation).
 
 #![allow(clippy::get_first)]
 
