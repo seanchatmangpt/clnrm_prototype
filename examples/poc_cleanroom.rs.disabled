@@ -98,9 +98,7 @@ struct PocRunResult {
 impl PocRunResult {
     /// Create from cleanroom RunResult
     fn from_cleanroom_result(
-        cleanroom_result: RunResult,
-        backend: &str,
-        duration_ms: u128,
+        cleanroom_result: RunResult, backend: &str, duration_ms: u128,
     ) -> Self {
         Self {
             backend: backend.to_string(),

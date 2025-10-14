@@ -126,10 +126,7 @@ struct GGenTestResult {
 impl GGenTestResult {
     /// Create from cleanroom RunResult
     fn from_cleanroom_result(
-        cleanroom_result: RunResult,
-        backend: &str,
-        duration_ms: u128,
-        command: &str,
+        cleanroom_result: RunResult, backend: &str, duration_ms: u128, command: &str,
     ) -> Self {
         Self {
             backend: backend.to_string(),

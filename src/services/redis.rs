@@ -92,6 +92,7 @@ impl Service for Redis {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used, clippy::get_first)]
 mod tests {
     use super::*;
 
@@ -106,8 +107,9 @@ mod tests {
         let redis = Redis::with_config(6379, Some("testpass".to_string()));
         assert!(redis.is_ok());
 
-        let redis = redis.unwrap();
-        assert_eq!(redis.password(), Some("testpass"));
+        if let Ok(redis) = redis {
+            assert_eq!(redis.password(), Some("testpass"));
+        }
     }
 
     #[test]
@@ -115,22 +117,23 @@ mod tests {
         let redis = Redis::with_config(6379, None);
         assert!(redis.is_ok());
 
-        let redis = redis.unwrap();
-        assert_eq!(redis.password(), None);
+        if let Ok(redis) = redis {
+            assert_eq!(redis.password(), None);
+        }
     }
 
     #[test]
     fn test_redis_service_trait() {
-        let mut redis = Redis::new().unwrap();
+        let mut redis = Redis::new().expect("Failed to create Redis instance");
         assert_eq!(redis.name(), "redis");
         assert!(redis.start().is_ok());
         assert!(redis.stop().is_ok());
-        assert!(redis.is_running().unwrap());
+        assert!(redis.is_running().expect("Failed to check if Redis is running"));
     }
 
     #[test]
     fn test_redis_connection_info() {
-        let redis = Redis::new().unwrap();
+        let redis = Redis::new().expect("Failed to create Redis instance");
         let conn_info = redis.connection_info();
         assert!(conn_info.params().contains("host=localhost"));
         assert!(conn_info.params().contains("port=6379"));

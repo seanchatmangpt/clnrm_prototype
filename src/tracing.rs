@@ -790,6 +790,7 @@ pub struct MetricSummary {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic, clippy::get_first)]
 mod tests {
     use super::*;
 
@@ -815,14 +816,14 @@ mod tests {
         let span_id = manager
             .start_span("test_span".to_string(), None)
             .await
-            .unwrap();
+            .expect("Operation failed");
         assert!(span_id != Uuid::nil());
 
         let data = manager.get_tracing_data().await;
         assert_eq!(data.spans.len(), 1);
         assert!(data.spans.contains_key("test_span"));
 
-        let span = &data.spans["test_span"];
+        let span = data.spans.get("test_span").expect("Span not found");
         assert_eq!(span.name, "test_span");
         assert!(matches!(span.status, SpanStatus::Running));
     }
@@ -836,15 +837,15 @@ mod tests {
         let _span_id = manager
             .start_span("test_span".to_string(), None)
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         // End span
         manager
             .end_span("test_span", SpanStatus::Completed)
             .await
-            .unwrap();
+            .expect("Operation failed");
 
-        let span = manager.get_span("test_span").await.unwrap().unwrap();
+        let span = manager.get_span("test_span").await.expect("Test operation failed").expect("Operation failed");
         assert!(matches!(span.status, SpanStatus::Completed));
         assert!(span.end_time.is_some());
         assert!(span.duration.is_some());
@@ -859,7 +860,7 @@ mod tests {
         let _span_id = manager
             .start_span("test_span".to_string(), None)
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         // Add event
         let mut event_data = HashMap::new();
@@ -867,11 +868,11 @@ mod tests {
         manager
             .add_span_event("test_span", "test_event".to_string(), event_data)
             .await
-            .unwrap();
+            .expect("Operation failed");
 
-        let span = manager.get_span("test_span").await.unwrap().unwrap();
+        let span = manager.get_span("test_span").await.expect("Test operation failed").expect("Operation failed");
         assert_eq!(span.events.len(), 1);
-        assert_eq!(span.events[0].name, "test_event");
+        assert_eq!(span.events.get(0).expect("Event not found").name, "test_event");
     }
 
     #[tokio::test]
@@ -891,13 +892,13 @@ mod tests {
                 Some("count".to_string()),
             )
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         let data = manager.get_tracing_data().await;
         assert_eq!(data.metrics.len(), 1);
         assert!(data.metrics.contains_key("test_metric"));
 
-        let metric = &data.metrics["test_metric"];
+        let metric = data.metrics.get("test_metric").expect("Metric not found");
         assert_eq!(metric.name, "test_metric");
         assert_eq!(metric.value, 42.0);
         assert!(matches!(metric.metric_type, MetricType::Counter));
@@ -922,12 +923,12 @@ mod tests {
                 metadata,
             )
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         let data = manager.get_tracing_data().await;
         assert_eq!(data.logs.len(), 1);
 
-        let log = &data.logs[0];
+        let log = data.logs.get(0).expect("Log not found");
         assert!(matches!(log.level, LogLevel::Info));
         assert_eq!(log.message, "Test message");
         assert_eq!(log.source, Some("test.rs".to_string()));
@@ -942,11 +943,11 @@ mod tests {
         let _span_id = manager
             .start_span("test_span".to_string(), None)
             .await
-            .unwrap();
+            .expect("Operation failed");
         manager
             .end_span("test_span", SpanStatus::Completed)
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         // Record metric
         manager
@@ -958,15 +959,15 @@ mod tests {
                 None,
             )
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         // Generate report
-        let report = manager.generate_tracing_report().await.unwrap();
+        let report = manager.generate_tracing_report().await.expect("Test operation failed");
         assert_eq!(report.session_id, session_id);
         assert_eq!(report.spans.len(), 1);
         assert_eq!(report.metrics.len(), 1);
-        assert_eq!(report.spans[0].name, "test_span");
-        assert_eq!(report.metrics[0].name, "test_metric");
+        assert_eq!(report.spans.get(0).expect("Span not found").name, "test_span");
+        assert_eq!(report.metrics.get(0).expect("Metric not found").name, "test_metric");
     }
 
     #[tokio::test]
@@ -1002,32 +1003,32 @@ mod tests {
         let parent_id = manager
             .start_span("parent".to_string(), None)
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         // Create child span
-        let child_id = manager
+        let _child_id = manager
             .start_span("child".to_string(), Some(parent_id))
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         // End child span
         manager
             .end_span("child", SpanStatus::Completed)
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         // End parent span
         manager
             .end_span("parent", SpanStatus::Completed)
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         let data = manager.get_tracing_data().await;
         assert_eq!(data.spans.len(), 2);
 
         // Verify hierarchy
-        let parent_span = data.spans.iter().find(|(_, s)| s.name == "parent").unwrap();
-        let child_span = data.spans.iter().find(|(_, s)| s.name == "child").unwrap();
+        let parent_span = data.spans.iter().find(|(_, s)| s.name == "parent").expect("Operation failed");
+        let child_span = data.spans.iter().find(|(_, s)| s.name == "child").expect("Operation failed");
 
         assert_eq!(child_span.1.parent_span_id, Some(parent_id));
         assert_eq!(parent_span.1.parent_span_id, None);
@@ -1048,7 +1049,7 @@ mod tests {
                 None,
             )
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         manager
             .record_metric(
@@ -1059,11 +1060,11 @@ mod tests {
                 None,
             )
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         let data = manager.get_tracing_data().await;
         assert_eq!(data.metrics.len(), 1);
-        assert_eq!(data.metrics["counter"].value, 3.0); // Should be aggregated
+        assert_eq!(data.metrics.get("counter").expect("Counter metric should exist").value, 3.0); // Should be aggregated
     }
 
     #[tokio::test]
@@ -1081,7 +1082,7 @@ mod tests {
                 HashMap::new(),
             )
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         manager
             .log(
@@ -1092,7 +1093,7 @@ mod tests {
                 HashMap::new(),
             )
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         manager
             .log(
@@ -1103,7 +1104,7 @@ mod tests {
                 HashMap::new(),
             )
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         manager
             .log(
@@ -1114,7 +1115,7 @@ mod tests {
                 HashMap::new(),
             )
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         let data = manager.get_tracing_data().await;
         assert_eq!(data.logs.len(), 4);
@@ -1139,10 +1140,10 @@ mod tests {
         for i in 0..10 {
             let manager_clone = manager.clone();
             let handle = tokio::spawn(async move {
-                let span_id = manager_clone
+                let _span_id = manager_clone
                     .start_span(format!("span_{}", i), None)
                     .await
-                    .unwrap();
+                    .expect("Operation failed");
 
                 manager_clone
                     .log(
@@ -1153,7 +1154,7 @@ mod tests {
                         HashMap::new(),
                     )
                     .await
-                    .unwrap();
+                    .expect("Operation failed");
 
                 manager_clone
                     .record_metric(
@@ -1164,19 +1165,19 @@ mod tests {
                         None,
                     )
                     .await
-                    .unwrap();
+                    .expect("Operation failed");
 
                 manager_clone
                     .end_span(&format!("span_{}", i), SpanStatus::Completed)
                     .await
-                    .unwrap();
+                    .expect("Operation failed");
             });
             handles.push(handle);
         }
 
         // Wait for all tasks to complete
         for handle in handles {
-            handle.await.unwrap();
+            handle.await.expect("Test operation failed");
         }
 
         let data = manager.get_tracing_data().await;
@@ -1194,7 +1195,7 @@ mod tests {
         manager
             .start_span("test_span".to_string(), None)
             .await
-            .unwrap();
+            .expect("Operation failed");
         manager
             .log(
                 LogLevel::Info,
@@ -1204,7 +1205,7 @@ mod tests {
                 HashMap::new(),
             )
             .await
-            .unwrap();
+            .expect("Operation failed");
         manager
             .record_metric(
                 "test_metric".to_string(),
@@ -1214,13 +1215,13 @@ mod tests {
                 None,
             )
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         let data = manager.get_tracing_data().await;
 
         // Test JSON serialization
-        let json = serde_json::to_string(&data).unwrap();
-        let deserialized: TracingData = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&data).expect("Operation failed");
+        let deserialized: TracingData = serde_json::from_str(&json).expect("Operation failed");
 
         assert_eq!(deserialized.session_id, data.session_id);
         assert_eq!(deserialized.spans.len(), data.spans.len());
@@ -1237,17 +1238,17 @@ mod tests {
         manager
             .start_span("test_span".to_string(), None)
             .await
-            .unwrap();
+            .expect("Operation failed");
         manager
             .end_span("test_span", SpanStatus::Completed)
             .await
-            .unwrap();
+            .expect("Operation failed");
 
-        let report = manager.generate_tracing_report().await.unwrap();
+        let report = manager.generate_tracing_report().await.expect("Test operation failed");
 
         // Test JSON serialization
-        let json = serde_json::to_string(&report).unwrap();
-        let deserialized: TracingReport = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&report).expect("Operation failed");
+        let deserialized: TracingReport = serde_json::from_str(&json).expect("Operation failed");
 
         assert_eq!(deserialized.session_id, report.session_id);
         assert_eq!(deserialized.spans.len(), report.spans.len());
@@ -1258,15 +1259,15 @@ mod tests {
     #[test]
     fn test_serializable_instant_new() {
         let instant = SerializableInstant::now();
-        assert!(instant.elapsed().as_nanos() >= 0);
+        assert!(instant.elapsed().as_nanos() > 0);
     }
 
     #[test]
     fn test_serializable_instant_serialization() {
         let instant = SerializableInstant::now();
 
-        let json = serde_json::to_string(&instant).unwrap();
-        let deserialized: SerializableInstant = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&instant).expect("Operation failed");
+        let deserialized: SerializableInstant = serde_json::from_str(&json).expect("Operation failed");
 
         // Due to approximation in serialization, we can't test exact equality
         // But the deserialized value should be close to the original
@@ -1375,8 +1376,8 @@ mod tests {
         span.tags.insert("key".to_string(), "value".to_string());
         span.status = SpanStatus::Completed;
 
-        let json = serde_json::to_string(&span).unwrap();
-        let deserialized: Span = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&span).expect("Operation failed");
+        let deserialized: Span = serde_json::from_str(&json).expect("Operation failed");
 
         assert_eq!(span.name, deserialized.name);
         assert_eq!(span.parent_span_id, deserialized.parent_span_id);
@@ -1394,8 +1395,8 @@ mod tests {
         ];
 
         for status in statuses {
-            let json = serde_json::to_string(&status).unwrap();
-            let deserialized: SpanStatus = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&status).expect("Operation failed");
+            let deserialized: SpanStatus = serde_json::from_str(&json).expect("Operation failed");
             assert_eq!(status, deserialized);
         }
     }
@@ -1513,8 +1514,8 @@ mod tests {
             SerializableSerializableInstant::now(),
         );
 
-        let json = serde_json::to_string(&log).unwrap();
-        let deserialized: Log = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&log).expect("Operation failed");
+        let deserialized: Log = serde_json::from_str(&json).expect("Operation failed");
 
         assert_eq!(log.level, deserialized.level);
         assert_eq!(log.message, deserialized.message);
@@ -1533,8 +1534,8 @@ mod tests {
         ];
 
         for level in levels {
-            let json = serde_json::to_string(&level).unwrap();
-            let deserialized: LogLevel = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&level).expect("Operation failed");
+            let deserialized: LogLevel = serde_json::from_str(&json).expect("Operation failed");
             assert_eq!(level, deserialized);
         }
     }
@@ -1601,8 +1602,8 @@ mod tests {
             SerializableSerializableInstant::now(),
         );
 
-        let json = serde_json::to_string(&metric).unwrap();
-        let deserialized: Metric = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&metric).expect("Operation failed");
+        let deserialized: Metric = serde_json::from_str(&json).expect("Operation failed");
 
         assert_eq!(metric.name, deserialized.name);
         assert_eq!(metric.value, deserialized.value);
@@ -1621,8 +1622,8 @@ mod tests {
         ];
 
         for metric_type in types {
-            let json = serde_json::to_string(&metric_type).unwrap();
-            let deserialized: MetricType = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&metric_type).expect("Operation failed");
+            let deserialized: MetricType = serde_json::from_str(&json).expect("Operation failed");
             assert_eq!(metric_type, deserialized);
         }
     }
@@ -1741,7 +1742,7 @@ mod tests {
 
         let retrieved = data.get_span("test_span");
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().name, "test_span");
+        assert_eq!(retrieved.expect("Operation failed").name, "test_span");
 
         let not_found = data.get_span("nonexistent");
         assert!(not_found.is_none());
@@ -1776,8 +1777,8 @@ mod tests {
         data.add_log(log);
         data.add_metric(metric);
 
-        let json = serde_json::to_string(&data).unwrap();
-        let deserialized: TracingData = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&data).expect("Operation failed");
+        let deserialized: TracingData = serde_json::from_str(&json).expect("Operation failed");
 
         assert_eq!(data.session_id, deserialized.session_id);
         assert_eq!(data.spans.len(), deserialized.spans.len());
@@ -1875,8 +1876,8 @@ mod tests {
             tags_count: metric.tags.len(),
         });
 
-        let json = serde_json::to_string(&report).unwrap();
-        let deserialized: TracingReport = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&report).expect("Operation failed");
+        let deserialized: TracingReport = serde_json::from_str(&json).expect("Operation failed");
 
         assert_eq!(report.session_id, deserialized.session_id);
         assert_eq!(report.spans.len(), deserialized.spans.len());

@@ -1,7 +1,7 @@
 //! Integration tests for lifecycle management system
 
-use clnrm::CleanroomConfig;
 use clnrm::CleanroomEnvironment;
+use clnrm::CleanroomConfig;
 use std::sync::Arc;
 use tempfile::TempDir;
 
@@ -133,24 +133,17 @@ async fn test_deployment_validation() {
 
     // Create a minimal Cargo.toml
     let cargo_toml = temp_dir.path().join("Cargo.toml");
-    tokio::fs::write(
-        &cargo_toml,
-        r#"
+    tokio::fs::write(&cargo_toml, r#"
 [package]
 name = "test-validation"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-"#,
-    )
-    .await
-    .unwrap();
+"#).await.unwrap();
 
     // Create src directory
-    tokio::fs::create_dir_all(temp_dir.path().join("src"))
-        .await
-        .unwrap();
+    tokio::fs::create_dir_all(temp_dir.path().join("src")).await.unwrap();
 
     let manager = LifecycleManager::new(config, None).unwrap();
     let validation = manager.validate("dev").await;

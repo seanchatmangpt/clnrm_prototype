@@ -50,7 +50,9 @@ impl Postgres {
 
     /// Create with custom configuration
     pub fn with_config(
-        database: impl Into<String>, username: impl Into<String>, password: impl Into<String>,
+        database: impl Into<String>,
+        username: impl Into<String>,
+        password: impl Into<String>,
     ) -> Result<Self> {
         let database = database.into();
         let username = username.into();
@@ -210,6 +212,7 @@ impl Service for Postgres {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used, clippy::unnecessary_unwrap, clippy::get_first)]
 mod tests {
     use super::*;
 
@@ -217,8 +220,7 @@ mod tests {
     fn test_postgres_creation() {
         let postgres = Postgres::new();
 
-        if postgres.is_ok() {
-            let postgres = postgres.unwrap();
+        if let Ok(postgres) = postgres {
             assert_eq!(postgres.database(), "testdb");
             assert_eq!(postgres.username(), "testuser");
         } else {
@@ -230,8 +232,7 @@ mod tests {
     fn test_postgres_with_config() {
         let postgres = Postgres::with_config("mydb", "myuser", "mypass");
 
-        if postgres.is_ok() {
-            let postgres = postgres.unwrap();
+        if let Ok(postgres) = postgres {
             assert_eq!(postgres.database(), "mydb");
             assert_eq!(postgres.username(), "myuser");
         } else {
@@ -243,22 +244,21 @@ mod tests {
     fn test_postgres_sql_operations() {
         let postgres = Postgres::new();
 
-        if postgres.is_ok() {
-            let postgres = postgres.unwrap();
+        if let Ok(postgres) = postgres {
 
             // Create test table
-            postgres.create_test_table().unwrap();
+            postgres.create_test_table().expect("Failed to create test table");
 
             // Insert test data
-            let id = postgres.insert_test_data("test_name").unwrap();
+            let id = postgres.insert_test_data("test_name").expect("Failed to insert test data");
             assert!(id > 0);
 
             // Get database size
-            let size = postgres.get_database_size().unwrap();
+            let size = postgres.get_database_size().expect("Failed to get database size");
             assert!(!size.is_empty());
 
             // Get active connections
-            let connections = postgres.get_active_connections().unwrap();
+            let connections = postgres.get_active_connections().expect("Failed to get active connections");
             assert!(connections >= 0);
         } else {
             println!("Skipping test - Docker not available");

@@ -352,7 +352,8 @@ impl TestReport {
 
     /// Generate comprehensive report
     pub async fn generate_report(
-        &self, metrics: &crate::cleanroom::CleanroomMetrics,
+        &self,
+        metrics: &crate::cleanroom::CleanroomMetrics,
     ) -> Result<ComprehensiveReport> {
         let data = self.report_data.lock().await;
 

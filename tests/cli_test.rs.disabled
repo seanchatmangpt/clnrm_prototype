@@ -4,7 +4,7 @@
 //! using process isolation without requiring container infrastructure.
 
 use anyhow::{Context, Result};
-use clnrm::{CleanroomConfig, CleanroomEnvironment};
+use clnrm::{CleanroomEnvironment, CleanroomConfig};
 use std::path::PathBuf;
 
 /// Helper to build the test CLI binary
@@ -45,9 +45,7 @@ fn create_cleanroom() -> Result<Cleanroom> {
 
 /// Helper to execute CLI and check results
 fn execute_cli(
-    cleanroom: &Cleanroom,
-    cli_path: &PathBuf,
-    args: &[&str],
+    cleanroom: &Cleanroom, cli_path: &PathBuf, args: &[&str],
 ) -> Result<ExecutionResult> {
     let mut command = vec![cli_path.to_str().context("Invalid CLI path")?];
     command.extend(args);

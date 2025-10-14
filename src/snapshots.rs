@@ -195,7 +195,10 @@ impl SnapshotManager {
 
     /// Capture a snapshot
     pub async fn capture_snapshot(
-        &self, name: String, content: String, snapshot_type: SnapshotType,
+        &self,
+        name: String,
+        content: String,
+        snapshot_type: SnapshotType,
         metadata: HashMap<String, String>,
     ) -> Result<()> {
         if !self.enabled {
@@ -538,6 +541,9 @@ pub struct SnapshotSummary {
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    // Allow unwrap/expect in tests as they are expected to panic on failure
+    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::get_first)]
 
     #[tokio::test]
     async fn test_snapshot_manager_creation() {
@@ -569,7 +575,7 @@ mod tests {
                 metadata,
             )
             .await
-            .unwrap();
+            .unwrap_or_else(|e| panic!("Snapshot operation failed: {}", e));
 
         let data = manager.get_snapshot_data().await;
         assert_eq!(data.snapshots.len(), 1);
@@ -598,14 +604,14 @@ mod tests {
                 HashMap::new(),
             )
             .await
-            .unwrap();
+            .unwrap_or_else(|e| panic!("Snapshot operation failed: {}", e));
 
         // Validate with same content
         let result = manager
             .validate_snapshot("test_snapshot", "test content")
             .await;
         assert!(result.is_ok());
-        assert!(result.unwrap());
+        assert!(result.unwrap_or_else(|e| panic!("Test operation failed: {}", e)));
 
         // Validate with different content
         let result = manager
@@ -628,13 +634,13 @@ mod tests {
                 HashMap::new(),
             )
             .await
-            .unwrap();
+            .unwrap_or_else(|e| panic!("Snapshot operation failed: {}", e));
 
         // Get snapshot
-        let snapshot = manager.get_snapshot("test_snapshot").await.unwrap();
+        let snapshot = manager.get_snapshot("test_snapshot").await.unwrap_or_else(|e| panic!("Failed to get snapshot: {}", e));
         assert!(snapshot.is_some());
 
-        let snapshot = snapshot.unwrap();
+        let snapshot = snapshot.unwrap_or_else(|| panic!("Snapshot not found"));
         assert_eq!(snapshot.name, "test_snapshot");
         assert_eq!(snapshot.content, "test content");
     }
@@ -653,13 +659,13 @@ mod tests {
                 HashMap::new(),
             )
             .await
-            .unwrap();
+            .unwrap_or_else(|e| panic!("Snapshot operation failed: {}", e));
 
         // Delete snapshot
-        manager.delete_snapshot("test_snapshot").await.unwrap();
+        manager.delete_snapshot("test_snapshot").await.unwrap_or_else(|e| panic!("Failed to delete snapshot: {}", e));
 
         // Verify deletion
-        let snapshot = manager.get_snapshot("test_snapshot").await.unwrap();
+        let snapshot = manager.get_snapshot("test_snapshot").await.unwrap_or_else(|e| panic!("Failed to get snapshot: {}", e));
         assert!(snapshot.is_none());
     }
 
@@ -677,10 +683,10 @@ mod tests {
                 HashMap::new(),
             )
             .await
-            .unwrap();
+            .unwrap_or_else(|e| panic!("Snapshot operation failed: {}", e));
 
         // Generate report
-        let report = manager.generate_snapshot_report().await.unwrap();
+        let report = manager.generate_snapshot_report().await.unwrap_or_else(|e| panic!("Failed to generate report: {}", e));
         assert_eq!(report.session_id, session_id);
         assert_eq!(report.snapshots.len(), 1);
         assert_eq!(report.snapshots[0].name, "test_snapshot");
@@ -718,8 +724,8 @@ mod tests {
             SnapshotType::ContainerState,
         );
 
-        let json = serde_json::to_string(&snapshot).unwrap();
-        let deserialized: Snapshot = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&snapshot).unwrap_or_else(|e| panic!("Failed to serialize snapshot: {}", e));
+        let deserialized: Snapshot = serde_json::from_str(&json).unwrap_or_else(|e| panic!("Failed to deserialize snapshot: {}", e));
 
         assert_eq!(snapshot.name, deserialized.name);
         assert_eq!(snapshot.content, deserialized.content);
@@ -746,8 +752,8 @@ mod tests {
         ];
 
         for snapshot_type in types {
-            let json = serde_json::to_string(&snapshot_type).unwrap();
-            let deserialized: SnapshotType = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&snapshot_type).unwrap_or_else(|e| panic!("Failed to serialize snapshot_type: {}", e));
+            let deserialized: SnapshotType = serde_json::from_str(&json).unwrap_or_else(|e| panic!("Failed to deserialize snapshot_type: {}", e));
             assert_eq!(snapshot_type, deserialized);
         }
     }
@@ -763,8 +769,8 @@ mod tests {
         ];
 
         for status in statuses {
-            let json = serde_json::to_string(&status).unwrap();
-            let deserialized: SnapshotValidationStatus = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&status).unwrap_or_else(|e| panic!("Failed to serialize status: {}", e));
+            let deserialized: SnapshotValidationStatus = serde_json::from_str(&json).unwrap_or_else(|e| panic!("Failed to deserialize status: {}", e));
             assert_eq!(status, deserialized);
         }
     }
@@ -815,7 +821,7 @@ mod tests {
 
         let retrieved = data.get_snapshot("test");
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().name, "test");
+        assert_eq!(retrieved.expect("Operation failed").name, "test");
 
         let not_found = data.get_snapshot("nonexistent");
         assert!(not_found.is_none());
@@ -857,7 +863,7 @@ mod tests {
         data.add_snapshot(snapshot);
         data.update_validation_status("test", SnapshotValidationStatus::Valid);
 
-        let updated = data.get_snapshot("test").unwrap();
+        let updated = data.get_snapshot("test").expect("Operation failed");
         assert_eq!(updated.validation_status, SnapshotValidationStatus::Valid);
         assert_eq!(data.statistics.valid_snapshots, 1);
     }
@@ -879,7 +885,7 @@ mod tests {
             SnapshotValidationStatus::Invalid("test error".to_string()),
         );
 
-        let updated = data.get_snapshot("test").unwrap();
+        let updated = data.get_snapshot("test").expect("Operation failed");
         assert_eq!(
             updated.validation_status,
             SnapshotValidationStatus::Invalid("test error".to_string())
@@ -957,8 +963,8 @@ mod tests {
         data.add_snapshot(snapshot);
         data.update_validation_status("test", SnapshotValidationStatus::Valid);
 
-        let json = serde_json::to_string(&data).unwrap();
-        let deserialized: SnapshotData = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&data).unwrap_or_else(|e| panic!("Failed to serialize data: {}", e));
+        let deserialized: SnapshotData = serde_json::from_str(&json).unwrap_or_else(|e| panic!("Failed to deserialize data: {}", e));
 
         assert_eq!(data.session_id, deserialized.session_id);
         assert_eq!(
@@ -1013,8 +1019,8 @@ mod tests {
             metadata: HashMap::new(),
         };
 
-        let json = serde_json::to_string(&summary).unwrap();
-        let deserialized: SnapshotSummary = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&summary).unwrap_or_else(|e| panic!("Failed to serialize summary: {}", e));
+        let deserialized: SnapshotSummary = serde_json::from_str(&json).unwrap_or_else(|e| panic!("Failed to deserialize summary: {}", e));
 
         assert_eq!(summary.name, deserialized.name);
         assert_eq!(summary.snapshot_type, deserialized.snapshot_type);
@@ -1046,8 +1052,8 @@ mod tests {
         // largest_snapshot_bytes field doesn't exist, skipping
         // smallest_snapshot_bytes field doesn't exist, skipping
 
-        let json = serde_json::to_string(&stats).unwrap();
-        let deserialized: SnapshotStatistics = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&stats).unwrap_or_else(|e| panic!("Failed to serialize stats: {}", e));
+        let deserialized: SnapshotStatistics = serde_json::from_str(&json).unwrap_or_else(|e| panic!("Failed to deserialize stats: {}", e));
 
         assert_eq!(stats.total_snapshots, deserialized.total_snapshots);
         assert_eq!(stats.valid_snapshots, deserialized.valid_snapshots);
@@ -1092,8 +1098,8 @@ mod tests {
             .recommendations
             .push("Test recommendation".to_string());
 
-        let json = serde_json::to_string(&report).unwrap();
-        let deserialized: SnapshotReport = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&report).unwrap_or_else(|e| panic!("Failed to serialize report: {}", e));
+        let deserialized: SnapshotReport = serde_json::from_str(&json).unwrap_or_else(|e| panic!("Failed to deserialize report: {}", e));
 
         assert_eq!(report.session_id, deserialized.session_id);
         assert_eq!(report.snapshots.len(), deserialized.snapshots.len());

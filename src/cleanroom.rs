@@ -774,7 +774,10 @@ impl CleanroomEnvironment {
 
     /// Spawn a concurrent task with timeout
     pub async fn spawn_task_with_timeout<F, T>(
-        &self, name: String, timeout: Duration, executor: F,
+        &self,
+        name: String,
+        timeout: Duration,
+        executor: F,
     ) -> Result<TaskId>
     where
         T: Send + 'static,
@@ -1144,14 +1147,14 @@ mod tests {
     #[tokio::test]
     async fn test_cleanroom_session_id() {
         let config = CleanroomConfig::default();
-        let cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
         assert!(!cleanroom.session_id().is_nil());
     }
 
     #[tokio::test]
     async fn test_cleanroom_config() {
         let config = CleanroomConfig::default();
-        let cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
         assert_eq!(
             cleanroom.config().test_execution_timeout,
             Duration::from_secs(300)
@@ -1161,27 +1164,27 @@ mod tests {
     #[tokio::test]
     async fn test_cleanroom_start_time() {
         let config = CleanroomConfig::default();
-        let cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
         assert!(cleanroom.start_time().elapsed().as_millis() < 1000);
     }
 
     #[tokio::test]
     async fn test_cleanroom_execute_test() {
         let config = CleanroomConfig::default();
-        let cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
 
         let result = cleanroom
             .execute_test("test", || Ok::<i32, CleanroomError>(42))
             .await;
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Operation failed"), 42);
     }
 
     #[tokio::test]
     async fn test_cleanroom_execute_test_failure() {
         let config = CleanroomConfig::default();
-        let cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
 
         let result = cleanroom
             .execute_test("test", || {
@@ -1195,7 +1198,7 @@ mod tests {
     #[tokio::test]
     async fn test_cleanroom_metrics() {
         let config = CleanroomConfig::default();
-        let cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
 
         let metrics = cleanroom.get_metrics().await;
         assert_eq!(metrics.session_id, cleanroom.session_id());
@@ -1205,14 +1208,14 @@ mod tests {
     #[tokio::test]
     async fn test_cleanroom_update_metrics() {
         let config = CleanroomConfig::default();
-        let cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
 
         cleanroom
             .update_metrics(|metrics| {
                 metrics.tests_executed = 5;
             })
             .await
-            .unwrap();
+            .expect("Operation failed");
 
         let metrics = cleanroom.get_metrics().await;
         assert_eq!(metrics.tests_executed, 5);
@@ -1221,16 +1224,16 @@ mod tests {
     #[tokio::test]
     async fn test_cleanroom_container_registry() {
         let config = CleanroomConfig::default();
-        let cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
 
         cleanroom
             .register_container("test".to_string(), "container_id".to_string())
             .await
-            .unwrap();
+            .expect("Operation failed");
         assert!(cleanroom.is_container_registered("test").await);
         assert_eq!(cleanroom.get_container_count().await, 1);
 
-        cleanroom.unregister_container("test").await.unwrap();
+        cleanroom.unregister_container("test").await.expect("Test operation failed");
         assert!(!cleanroom.is_container_registered("test").await);
         assert_eq!(cleanroom.get_container_count().await, 0);
     }
@@ -1238,22 +1241,22 @@ mod tests {
     #[tokio::test]
     async fn test_cleanroom_cleanup() {
         let config = CleanroomConfig::default();
-        let mut cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let mut cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
 
         cleanroom
             .register_container("test".to_string(), "container_id".to_string())
             .await
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(cleanroom.get_container_count().await, 1);
 
-        cleanroom.cleanup().await.unwrap();
+        cleanroom.cleanup().await.expect("Test operation failed");
         assert_eq!(cleanroom.get_container_count().await, 0);
     }
 
     #[tokio::test]
     async fn test_cleanroom_health_status() {
         let config = CleanroomConfig::default();
-        let cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
 
         let status = cleanroom.get_health_status().await;
         assert_eq!(status, HealthStatus::Healthy);
@@ -1263,10 +1266,10 @@ mod tests {
     async fn test_guard_drop_no_panic() {
         // Test that dropping CleanroomGuard doesn't panic
         let config = CleanroomConfig::default();
-        let cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
 
         {
-            let guard = CleanroomGuard::new(Arc::new(cleanroom));
+            let _guard = CleanroomGuard::new(Arc::new(cleanroom));
             // Guard will be dropped here - this should NOT panic!
         }
 
@@ -1277,7 +1280,7 @@ mod tests {
     async fn test_guard_cleanup_methods() {
         // Test that cleanup methods never panic even when called directly
         let config = CleanroomConfig::default();
-        let cleanroom = CleanroomEnvironment::new(config).await.unwrap();
+        let cleanroom = CleanroomEnvironment::new(config).await.expect("Test operation failed");
         let guard = CleanroomGuard::new(Arc::new(cleanroom));
 
         // Test cleanup_sync - should never panic

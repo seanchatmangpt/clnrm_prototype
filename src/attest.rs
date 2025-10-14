@@ -98,7 +98,9 @@ impl AttestationGenerator {
 
     /// Generate coverage attestation from coverage data
     pub fn generate_coverage_attestation(
-        &self, lines_covered: u64, lines_total: u64,
+        &self,
+        lines_covered: u64,
+        lines_total: u64,
     ) -> CoverageAttestation {
         let percentage = if lines_total > 0 {
             (lines_covered as f64 / lines_total as f64) * 100.0
@@ -116,7 +118,9 @@ impl AttestationGenerator {
 
     /// Generate attestation for a test run
     pub fn generate(
-        &self, run_info: &RunInfo, coverage_data: Option<(u64, u64)>,
+        &self,
+        run_info: &RunInfo,
+        coverage_data: Option<(u64, u64)>,
     ) -> Result<Attestation> {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

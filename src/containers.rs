@@ -39,7 +39,9 @@ impl PostgresContainer {
     /// Note: This uses blocking operations internally. When calling from async contexts,
     /// wrap in `tokio::task::spawn_blocking` or use async wrapper methods.
     pub fn new(
-        database_name: impl Into<String>, username: impl Into<String>, password: impl Into<String>,
+        database_name: impl Into<String>,
+        username: impl Into<String>,
+        password: impl Into<String>,
     ) -> Result<Self> {
         let database_name = database_name.into();
         let username = username.into();
@@ -77,7 +79,8 @@ impl PostgresContainer {
     ///
     /// This is the async-friendly version that properly handles blocking operations.
     pub async fn new_async(
-        database_name: impl Into<String> + Send, username: impl Into<String> + Send,
+        database_name: impl Into<String> + Send,
+        username: impl Into<String> + Send,
         password: impl Into<String> + Send,
     ) -> Result<Self> {
         let database_name = database_name.into();
@@ -410,7 +413,9 @@ impl GenericContainer {
     /// Note: This uses blocking operations internally. When calling from async contexts,
     /// wrap in `tokio::task::spawn_blocking` or use async wrapper methods.
     pub fn new(
-        name: impl Into<String>, image_name: impl Into<String>, image_tag: impl Into<String>,
+        name: impl Into<String>,
+        image_name: impl Into<String>,
+        image_tag: impl Into<String>,
     ) -> Result<Self> {
         let name = name.into();
         let image_name = image_name.into();
@@ -433,7 +438,8 @@ impl GenericContainer {
     ///
     /// This is the async-friendly version that properly handles blocking operations.
     pub async fn new_async(
-        name: impl Into<String> + Send, image_name: impl Into<String> + Send,
+        name: impl Into<String> + Send,
+        image_name: impl Into<String> + Send,
         image_tag: impl Into<String> + Send,
     ) -> Result<Self> {
         let name = name.into();

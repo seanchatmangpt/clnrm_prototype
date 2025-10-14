@@ -109,8 +109,7 @@ pub fn create_test_resource_limits() -> ResourceLimits {
 
 /// Wait for a condition to be true with timeout
 pub async fn wait_for_condition<F, Fut>(
-    condition: F,
-    timeout_duration: Duration,
+    condition: F, timeout_duration: Duration,
 ) -> Result<bool, CleanroomError>
 where
     F: Fn() -> Fut,
@@ -128,8 +127,7 @@ where
 
 /// Execute a test with timeout
 pub async fn execute_test_with_timeout<F, Fut, T>(
-    test: F,
-    timeout_duration: Duration,
+    test: F, timeout_duration: Duration,
 ) -> Result<T, CleanroomError>
 where
     F: Fn() -> Fut,
@@ -212,8 +210,7 @@ pub mod assertions {
 
     /// Assert that a result is ok and contains expected value
     pub fn assert_result_ok<T: PartialEq + std::fmt::Debug>(
-        result: &Result<T, CleanroomError>,
-        expected: &T,
+        result: &Result<T, CleanroomError>, expected: &T,
     ) {
         match result {
             Ok(value) => assert_eq!(value, expected),
@@ -231,8 +228,7 @@ pub mod assertions {
 
     /// Assert that a result is an error with specific kind
     pub fn assert_result_err_kind<T: std::fmt::Debug>(
-        result: &Result<T, CleanroomError>,
-        expected_kind: clnrm::ErrorKind,
+        result: &Result<T, CleanroomError>, expected_kind: clnrm::ErrorKind,
     ) {
         match result {
             Ok(value) => panic!("Expected Err({:?}), got Ok({:?})", expected_kind, value),
@@ -242,8 +238,7 @@ pub mod assertions {
 
     /// Assert that a result is an error with specific message
     pub fn assert_result_err_message<T: std::fmt::Debug>(
-        result: &Result<T, CleanroomError>,
-        expected_message: &str,
+        result: &Result<T, CleanroomError>, expected_message: &str,
     ) {
         match result {
             Ok(value) => {

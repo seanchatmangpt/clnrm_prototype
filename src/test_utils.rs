@@ -114,7 +114,8 @@ impl TestContainerHelper {
 
     /// Get container metrics with timeout
     pub async fn get_metrics<C>(
-        container: &C, timeout: Duration,
+        container: &C,
+        timeout: Duration,
     ) -> Result<crate::cleanroom::ContainerMetrics>
     where
         C: crate::container_base::BaseContainer,
@@ -242,7 +243,8 @@ pub mod cleanup {
 
     /// Cleanup test environment with timeout
     pub async fn cleanup_environment(
-        env: &mut CleanroomEnvironment, timeout: Duration,
+        env: &mut CleanroomEnvironment,
+        timeout: Duration,
     ) -> Result<()> {
         tokio::time::timeout(timeout, env.cleanup())
             .await
@@ -261,6 +263,7 @@ pub mod cleanup {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::get_first)]
 mod tests {
     use super::*;
     use std::time::Duration;
@@ -305,8 +308,8 @@ mod tests {
         let start_time = Instant::now();
         let metrics = ContainerMetricsBuilder::postgres(&start_time);
 
-        assertions::assert_metrics_reasonable(&metrics).unwrap();
-        assertions::assert_minimum_uptime(&metrics, 0).unwrap();
-        assertions::assert_memory_range(&metrics, 100, 200).unwrap();
+        assertions::assert_metrics_reasonable(&metrics).expect("Metrics should be reasonable");
+        assertions::assert_minimum_uptime(&metrics, 0).expect("Minimum uptime assertion should pass");
+        assertions::assert_memory_range(&metrics, 100, 200).expect("Memory range assertion should pass");
     }
 }

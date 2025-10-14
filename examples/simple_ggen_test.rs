@@ -19,7 +19,11 @@ struct TestResult {
 
 impl TestResult {
     fn new(
-        exit_code: i32, stdout: String, stderr: String, duration_ms: u128, command: String,
+        exit_code: i32,
+        stdout: String,
+        stderr: String,
+        duration_ms: u128,
+        command: String,
     ) -> Self {
         Self {
             exit_code,

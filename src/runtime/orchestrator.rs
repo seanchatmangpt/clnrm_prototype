@@ -384,7 +384,10 @@ impl ConcurrencyOrchestrator {
 
     /// Spawn a task with timeout
     pub async fn spawn_task_with_timeout<T, F>(
-        &mut self, name: String, timeout: Duration, executor: F,
+        &mut self,
+        name: String,
+        timeout: Duration,
+        executor: F,
     ) -> Result<TaskId>
     where
         T: Send + 'static,

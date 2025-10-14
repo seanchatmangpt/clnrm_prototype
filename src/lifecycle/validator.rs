@@ -237,7 +237,10 @@ impl DeploymentValidator {
         }
 
         // Run cargo clippy
-        let clippy_passed = self.run_cargo_command(&["clippy", "--", "-D", "warnings"]).await.unwrap_or(true);
+        let clippy_passed = self
+            .run_cargo_command(&["clippy", "--", "-D", "warnings"])
+            .await
+            .unwrap_or(true);
         if !clippy_passed {
             issues.push(QualityIssue {
                 severity: IssueSeverity::Warning,
@@ -247,7 +250,10 @@ impl DeploymentValidator {
         }
 
         // Run cargo fmt check
-        let fmt_passed = self.run_cargo_command(&["fmt", "--", "--check"]).await.unwrap_or(true);
+        let fmt_passed = self
+            .run_cargo_command(&["fmt", "--", "--check"])
+            .await
+            .unwrap_or(true);
         if !fmt_passed {
             issues.push(QualityIssue {
                 severity: IssueSeverity::Warning,

@@ -3,7 +3,7 @@
 //! This test demonstrates that the Cleanroom Testing Framework properly
 //! isolates file system operations and ensures cleanup.
 
-use crate::cleanroom::{
+use clnrm::{
     run, CleanroomConfig, CleanroomEnvironment, CleanroomGuard, ContainerWrapper, GenericContainer,
 };
 use std::fs;

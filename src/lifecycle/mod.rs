@@ -47,10 +47,10 @@ pub mod phases;
 pub mod readiness;
 pub mod validator;
 
-pub use config::{LifecycleConfig, Phase, EnvironmentConfig, Requirement, Status};
-pub use phases::{LifecycleManager, InitResult, TestResults, DeploymentResult};
+pub use config::{EnvironmentConfig, LifecycleConfig, Phase, Requirement, Status};
+pub use phases::{DeploymentResult, InitResult, LifecycleManager, TestResults};
 pub use readiness::{ReadinessScore, ReadinessTracker, RequirementStatus};
-pub use validator::{DeploymentValidator, ValidationReport, QualityReport};
+pub use validator::{DeploymentValidator, QualityReport, ValidationReport};
 
 use crate::error::Result;
 

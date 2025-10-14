@@ -351,7 +351,7 @@ impl ContainerIdGenerator {
     /// Generate the next container ID
     pub fn next(&mut self) -> ContainerId {
         if self.deterministic {
-            let id = ContainerId::from_value(self.counter).unwrap();
+            let id = ContainerId::from_value(self.counter).expect("Operation failed");
             self.counter += 1;
             id
         } else {
@@ -404,18 +404,18 @@ mod tests {
     async fn test_container_id_registry() {
         let registry = ContainerIdRegistry::new();
         
-        let id = registry.register_container("test-container".to_string(), "alpine:latest".to_string()).await.unwrap();
+        let id = registry.register_container("test-container".to_string(), "alpine:latest".to_string()).await.expect("Test operation failed");
         
         assert!(registry.is_registered(&id));
         assert_eq!(registry.total_count(), 1);
         
-        let metadata = registry.get_metadata(&id).await.unwrap();
+        let metadata = registry.get_metadata(&id).await.expect("Test operation failed");
         assert_eq!(metadata.name, "test-container");
         assert_eq!(metadata.image, "alpine:latest");
         assert_eq!(metadata.status, ContainerStatus::Starting);
         
-        registry.update_status(&id, ContainerStatus::Running).await.unwrap();
-        let metadata = registry.get_metadata(&id).await.unwrap();
+        registry.update_status(&id, ContainerStatus::Running).await.expect("Test operation failed");
+        let metadata = registry.get_metadata(&id).await.expect("Test operation failed");
         assert_eq!(metadata.status, ContainerStatus::Running);
     }
 
@@ -423,7 +423,7 @@ mod tests {
     async fn test_container_resource_usage() {
         let registry = ContainerIdRegistry::new();
         
-        let id = registry.register_container("test-container".to_string(), "alpine:latest".to_string()).await.unwrap();
+        let id = registry.register_container("test-container".to_string(), "alpine:latest".to_string()).await.expect("Test operation failed");
         
         let usage = ContainerResourceUsage {
             cpu_usage_percent: 25.0,
@@ -433,13 +433,13 @@ mod tests {
             network_bytes_received: 2000,
         };
         
-        registry.update_resource_usage(&id, usage.clone()).await.unwrap();
+        registry.update_resource_usage(&id, usage.clone()).await.expect("Test operation failed");
         
-        let metadata = registry.get_metadata(&id).await.unwrap();
+        let metadata = registry.get_metadata(&id).await.expect("Test operation failed");
         assert!(metadata.resource_usage.is_some());
         assert!(metadata.last_health_check.is_some());
         
-        let stored_usage = metadata.resource_usage.unwrap();
+        let stored_usage = metadata.resource_usage.expect("Operation failed");
         assert_eq!(stored_usage.cpu_usage_percent, 25.0);
         assert_eq!(stored_usage.memory_usage_bytes, 512 * 1024 * 1024);
     }
@@ -448,12 +448,12 @@ mod tests {
     async fn test_container_name_mapping() {
         let registry = ContainerIdRegistry::new();
         
-        let id = registry.register_container("test-container".to_string(), "alpine:latest".to_string()).await.unwrap();
+        let id = registry.register_container("test-container".to_string(), "alpine:latest".to_string()).await.expect("Test operation failed");
         
-        let found_id = registry.get_id_by_name("test-container").await.unwrap();
+        let found_id = registry.get_id_by_name("test-container").await.expect("Test operation failed");
         assert_eq!(id, found_id);
         
-        let found_name = registry.get_name_by_id(&id).await.unwrap();
+        let found_name = registry.get_name_by_id(&id).await.expect("Test operation failed");
         assert_eq!(found_name, "test-container");
     }
 
@@ -461,11 +461,11 @@ mod tests {
     async fn test_container_status_filtering() {
         let registry = ContainerIdRegistry::new();
         
-        let id1 = registry.register_container("container1".to_string(), "alpine:latest".to_string()).await.unwrap();
-        let id2 = registry.register_container("container2".to_string(), "alpine:latest".to_string()).await.unwrap();
+        let id1 = registry.register_container("container1".to_string(), "alpine:latest".to_string()).await.expect("Test operation failed");
+        let id2 = registry.register_container("container2".to_string(), "alpine:latest".to_string()).await.expect("Test operation failed");
         
-        registry.update_status(&id1, ContainerStatus::Running).await.unwrap();
-        registry.update_status(&id2, ContainerStatus::Stopped).await.unwrap();
+        registry.update_status(&id1, ContainerStatus::Running).await.expect("Test operation failed");
+        registry.update_status(&id2, ContainerStatus::Stopped).await.expect("Test operation failed");
         
         let running = registry.get_containers_by_status(ContainerStatus::Running).await;
         let stopped = registry.get_containers_by_status(ContainerStatus::Stopped).await;
@@ -480,8 +480,8 @@ mod tests {
     async fn test_container_high_usage_filtering() {
         let registry = ContainerIdRegistry::new();
         
-        let id1 = registry.register_container("container1".to_string(), "alpine:latest".to_string()).await.unwrap();
-        let id2 = registry.register_container("container2".to_string(), "alpine:latest".to_string()).await.unwrap();
+        let id1 = registry.register_container("container1".to_string(), "alpine:latest".to_string()).await.expect("Test operation failed");
+        let id2 = registry.register_container("container2".to_string(), "alpine:latest".to_string()).await.expect("Test operation failed");
         
         let usage1 = ContainerResourceUsage {
             cpu_usage_percent: 90.0,
@@ -499,8 +499,8 @@ mod tests {
             network_bytes_received: 1000,
         };
         
-        registry.update_resource_usage(&id1, usage1).await.unwrap();
-        registry.update_resource_usage(&id2, usage2).await.unwrap();
+        registry.update_resource_usage(&id1, usage1).await.expect("Test operation failed");
+        registry.update_resource_usage(&id2, usage2).await.expect("Test operation failed");
         
         let high_usage = registry.get_containers_with_high_usage(80.0, 400 * 1024 * 1024).await;
         
@@ -512,11 +512,11 @@ mod tests {
     async fn test_container_statistics() {
         let registry = ContainerIdRegistry::new();
         
-        let id1 = registry.register_container("container1".to_string(), "alpine:latest".to_string()).await.unwrap();
-        let id2 = registry.register_container("container2".to_string(), "alpine:latest".to_string()).await.unwrap();
+        let id1 = registry.register_container("container1".to_string(), "alpine:latest".to_string()).await.expect("Test operation failed");
+        let id2 = registry.register_container("container2".to_string(), "alpine:latest".to_string()).await.expect("Test operation failed");
         
-        registry.update_status(&id1, ContainerStatus::Running).await.unwrap();
-        registry.update_status(&id2, ContainerStatus::Stopped).await.unwrap();
+        registry.update_status(&id1, ContainerStatus::Running).await.expect("Test operation failed");
+        registry.update_status(&id2, ContainerStatus::Stopped).await.expect("Test operation failed");
         
         let usage = ContainerResourceUsage {
             cpu_usage_percent: 25.0,
@@ -526,7 +526,7 @@ mod tests {
             network_bytes_received: 2000,
         };
         
-        registry.update_resource_usage(&id1, usage).await.unwrap();
+        registry.update_resource_usage(&id1, usage).await.expect("Test operation failed");
         
         let stats = registry.get_statistics().await;
         assert_eq!(stats.total_containers, 2);

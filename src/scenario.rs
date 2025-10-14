@@ -148,7 +148,7 @@ impl Scenario {
         }
 
         let cmd = Cmd::new(&args_vec[0])
-            .args(&args_vec[1..].iter().map(|s| s.as_str()).collect::<Vec<_>>());
+            .args(args_vec.get(1..).unwrap_or(&[]).iter().map(|s| s.as_str()).collect::<Vec<_>>());
         self.steps.push(Step {
             name: label,
             cmd,
@@ -190,7 +190,8 @@ impl Scenario {
 
     /// Run the scenario with a specific backend
     pub fn run_with_backend(
-        self, backend: crate::backend::TestcontainerBackend,
+        self,
+        backend: crate::backend::TestcontainerBackend,
     ) -> Result<RunResult> {
         let start_time = std::time::Instant::now();
         let mut steps = Vec::new();

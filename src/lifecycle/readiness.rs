@@ -85,7 +85,8 @@ impl ReadinessTracker {
 
         // Evaluate each requirement
         for req in &self.config.readiness_requirements {
-            let status = self.requirement_states
+            let status = self
+                .requirement_states
                 .get(&req.id)
                 .copied()
                 .unwrap_or(req.status);
@@ -108,18 +109,12 @@ impl ReadinessTracker {
 
             // Track blockers
             if req.priority >= 4 && status != Status::Complete {
-                blockers.push(format!(
-                    "{} ({}): {}",
-                    req.name, status, req.description
-                ));
+                blockers.push(format!("{} ({}): {}", req.name, status, req.description));
             }
 
             // Track warnings
             if req.priority >= 2 && req.priority < 4 && status != Status::Complete {
-                warnings.push(format!(
-                    "{} ({}): {}",
-                    req.name, status, req.description
-                ));
+                warnings.push(format!("{} ({}): {}", req.name, status, req.description));
             }
 
             // Calculate score contribution
@@ -171,10 +166,16 @@ impl ReadinessTracker {
     pub async fn update_requirement(&self, id: &str, _status: Status) -> Result<()> {
         // Note: In a real implementation, this would persist to storage
         // For now, we just validate the ID exists
-        if !self.config.readiness_requirements.iter().any(|r| r.id == id) {
-            return Err(CleanroomError::validation_error(
-                format!("Requirement '{}' not found", id)
-            ));
+        if !self
+            .config
+            .readiness_requirements
+            .iter()
+            .any(|r| r.id == id)
+        {
+            return Err(CleanroomError::validation_error(format!(
+                "Requirement '{}' not found",
+                id
+            )));
         }
 
         Ok(())

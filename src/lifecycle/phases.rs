@@ -114,19 +114,25 @@ pub struct DeploymentResult {
 
 impl LifecycleManager {
     /// Create new lifecycle manager
-    pub fn new(config: LifecycleConfig, cleanroom: Option<Arc<CleanroomEnvironment>>) -> Result<Self> {
+    pub fn new(
+        config: LifecycleConfig,
+        cleanroom: Option<Arc<CleanroomEnvironment>>,
+    ) -> Result<Self> {
         config.validate()?;
 
         let readiness = ReadinessTracker::new(config.clone());
-        let validator = cleanroom.as_ref().map(|cr| DeploymentValidator::new(cr.clone()));
+        let validator = cleanroom
+            .as_ref()
+            .map(|cr| DeploymentValidator::new(cr.clone()));
 
         Ok(Self {
             config,
             cleanroom,
             readiness,
             validator,
-            project_root: std::env::current_dir()
-                .map_err(|e| CleanroomError::io_error(format!("Failed to get current directory: {}", e)))?,
+            project_root: std::env::current_dir().map_err(|e| {
+                CleanroomError::io_error(format!("Failed to get current directory: {}", e))
+            })?,
         })
     }
 
@@ -136,7 +142,9 @@ impl LifecycleManager {
         let mut created_files = Vec::new();
 
         // Find init phase
-        let phase = self.config.get_phase("init")
+        let phase = self
+            .config
+            .get_phase("init")
             .ok_or_else(|| CleanroomError::validation_error("Init phase not found"))?;
 
         // Execute init command
@@ -147,9 +155,9 @@ impl LifecycleManager {
         for dir in dirs {
             let dir_path = self.project_root.join(dir);
             if !dir_path.exists() {
-                tokio::fs::create_dir_all(&dir_path)
-                    .await
-                    .map_err(|e| CleanroomError::io_error(format!("Failed to create directory {}: {}", dir, e)))?;
+                tokio::fs::create_dir_all(&dir_path).await.map_err(|e| {
+                    CleanroomError::io_error(format!("Failed to create directory {}: {}", dir, e))
+                })?;
                 created_files.push(format!("{}/", dir));
             }
         }
@@ -176,7 +184,9 @@ impl LifecycleManager {
         let start = Instant::now();
 
         // Find test phase
-        let phase = self.config.get_phase("test")
+        let phase = self
+            .config
+            .get_phase("test")
             .ok_or_else(|| CleanroomError::validation_error("Test phase not found"))?;
 
         // Execute test command
@@ -211,14 +221,16 @@ impl LifecycleManager {
         // Check readiness first
         let readiness = self.readiness.evaluate().await?;
         if readiness.score < 80 {
-            return Err(CleanroomError::validation_error(
-                format!("Not ready for deployment (score: {})", readiness.score)
-            ));
+            return Err(CleanroomError::validation_error(format!(
+                "Not ready for deployment (score: {})",
+                readiness.score
+            )));
         }
 
         // Get environment config
-        let env_config = self.config.get_environment(environment)
-            .ok_or_else(|| CleanroomError::validation_error(format!("Environment '{}' not found", environment)))?;
+        let env_config = self.config.get_environment(environment).ok_or_else(|| {
+            CleanroomError::validation_error(format!("Environment '{}' not found", environment))
+        })?;
 
         // Validate before deployment
         let validation_passed = if let Some(validator) = &self.validator {
@@ -229,17 +241,22 @@ impl LifecycleManager {
         };
 
         if !validation_passed {
-            return Err(CleanroomError::validation_error("Deployment validation failed"));
+            return Err(CleanroomError::validation_error(
+                "Deployment validation failed",
+            ));
         }
 
         // Execute deployment command
         let mut artifacts = Vec::new();
         if let Some(deploy_cmd) = &env_config.deploy_command {
-            let output = self.execute_command(deploy_cmd, &env_config.variables).await?;
+            let output = self
+                .execute_command(deploy_cmd, &env_config.variables)
+                .await?;
             if !output.success {
-                return Err(CleanroomError::execution_error(
-                    format!("Deployment failed: {}", output.stderr)
-                ));
+                return Err(CleanroomError::execution_error(format!(
+                    "Deployment failed: {}",
+                    output.stderr
+                )));
             }
 
             // Look for build artifacts
@@ -273,8 +290,9 @@ impl LifecycleManager {
 
     /// Validate environment configuration
     pub async fn validate(&self, environment: &str) -> Result<super::validator::ValidationReport> {
-        let env_config = self.config.get_environment(environment)
-            .ok_or_else(|| CleanroomError::validation_error(format!("Environment '{}' not found", environment)))?;
+        let env_config = self.config.get_environment(environment).ok_or_else(|| {
+            CleanroomError::validation_error(format!("Environment '{}' not found", environment))
+        })?;
 
         // Run validation checks
         let mut checks = Vec::new();
@@ -326,29 +344,33 @@ impl LifecycleManager {
     async fn execute_phase(&self, phase: &Phase) -> Result<PhaseOutput> {
         let timeout = Duration::from_secs(phase.timeout_seconds);
 
-        let output = tokio::time::timeout(
-            timeout,
-            self.execute_command(&phase.command, &phase.env)
-        )
-        .await
-        .map_err(|_| CleanroomError::timeout_error(format!("Phase '{}' timed out", phase.name)))??;
+        let output =
+            tokio::time::timeout(timeout, self.execute_command(&phase.command, &phase.env))
+                .await
+                .map_err(|_| {
+                    CleanroomError::timeout_error(format!("Phase '{}' timed out", phase.name))
+                })??;
 
         Ok(output)
     }
 
     /// Execute command in cleanroom
     async fn execute_in_cleanroom(&self, phase: &Phase) -> Result<PhaseOutput> {
-        let cleanroom = self.cleanroom.as_ref()
+        let cleanroom = self
+            .cleanroom
+            .as_ref()
             .ok_or_else(|| CleanroomError::validation_error("Cleanroom not available"))?;
 
         // Build command string for execution
         let _cmd = format!("{} {}", phase.command, phase.args.join(" "));
 
         // Execute test in cleanroom - for now, just run a simple test
-        let _result = cleanroom.execute_test("phase_test", || {
-            // Placeholder: In production, this would execute the actual command
-            Ok::<(), CleanroomError>(())
-        }).await?;
+        let _result = cleanroom
+            .execute_test("phase_test", || {
+                // Placeholder: In production, this would execute the actual command
+                Ok::<(), CleanroomError>(())
+            })
+            .await?;
 
         // Return success result
         Ok(PhaseOutput {
@@ -360,15 +382,19 @@ impl LifecycleManager {
     }
 
     /// Execute shell command
-    async fn execute_command(&self, command: &str, env_vars: &HashMap<String, String>) -> Result<PhaseOutput> {
+    async fn execute_command(
+        &self,
+        command: &str,
+        env_vars: &HashMap<String, String>,
+    ) -> Result<PhaseOutput> {
         let parts: Vec<&str> = command.split_whitespace().collect();
         if parts.is_empty() {
             return Err(CleanroomError::validation_error("Empty command"));
         }
 
         let mut cmd = Command::new(parts[0]);
-        if parts.len() > 1 {
-            cmd.args(&parts[1..]);
+        if let Some(args) = parts.get(1..) {
+            cmd.args(args);
         }
 
         // Add environment variables
@@ -378,9 +404,9 @@ impl LifecycleManager {
 
         cmd.current_dir(&self.project_root);
 
-        let output = cmd.output()
-            .await
-            .map_err(|e| CleanroomError::io_error(format!("Failed to execute command {}: {}", command, e)))?;
+        let output = cmd.output().await.map_err(|e| {
+            CleanroomError::io_error(format!("Failed to execute command {}: {}", command, e))
+        })?;
 
         Ok(PhaseOutput {
             success: output.status.success(),
@@ -415,16 +441,21 @@ impl LifecycleManager {
             }
 
             // Parse individual test lines
-            if line.starts_with("test ") && (line.contains("... ok") || line.contains("... FAILED")) {
+            if line.starts_with("test ") && (line.contains("... ok") || line.contains("... FAILED"))
+            {
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() >= 3 {
-                    let name = parts[1].to_string();
+                    let name = parts.get(1).unwrap_or(&"").to_string();
                     let passed_test = line.contains("... ok");
                     tests.push(TestResult {
                         name,
                         passed: passed_test,
                         duration_ms: 0,
-                        error: if !passed_test { Some("Test failed".to_string()) } else { None },
+                        error: if !passed_test {
+                            Some("Test failed".to_string())
+                        } else {
+                            None
+                        },
                     });
                 }
             }
@@ -435,7 +466,11 @@ impl LifecycleManager {
             passed,
             failed,
             duration_ms: 0,
-            coverage: if total > 0 { (passed as f64 / total as f64) * 100.0 } else { 0.0 },
+            coverage: if total > 0 {
+                (passed as f64 / total as f64) * 100.0
+            } else {
+                0.0
+            },
             tests,
             output: output.to_string(),
         })
@@ -486,7 +521,8 @@ mod tests {
         let config = LifecycleConfig::default_with_name("test");
         let manager = LifecycleManager::new(config, None).unwrap();
 
-        let output = "test test_one ... ok\ntest test_two ... FAILED\ntest result: ok. 1 passed; 1 failed";
+        let output =
+            "test test_one ... ok\ntest test_two ... FAILED\ntest result: ok. 1 passed; 1 failed";
         let results = manager.parse_test_output(output).unwrap();
 
         assert_eq!(results.total, 2);

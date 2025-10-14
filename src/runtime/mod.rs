@@ -307,8 +307,8 @@ impl Runtime {
         let mut cmd = Command::new(&self.config.args[0]);
 
         // Add arguments
-        if self.config.args.len() > 1 {
-            cmd.args(&self.config.args[1..]);
+        if let Some(args) = self.config.args.get(1..) {
+            cmd.args(args);
         }
 
         // Set working directory

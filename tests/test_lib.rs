@@ -11,7 +11,7 @@
 
 /// Test utilities and helpers
 pub mod test_utils {
-    use crate::cleanroom::{
+    use clnrm::{
         CleanroomConfig, CleanroomEnvironment, Error as CleanroomError, ResourceLimits,
         SecurityLevel,
     };
@@ -41,7 +41,8 @@ pub mod test_utils {
 
     /// Wait for a condition to be true with timeout
     pub async fn wait_for_condition<F, Fut>(
-        condition: F, timeout_duration: Duration,
+        condition: F,
+        timeout_duration: Duration,
     ) -> Result<bool, CleanroomError>
     where
         F: Fn() -> Fut,
@@ -59,7 +60,8 @@ pub mod test_utils {
 
     /// Execute a test with timeout
     pub async fn execute_test_with_timeout<F, Fut, T>(
-        test: F, timeout_duration: Duration,
+        test: F,
+        timeout_duration: Duration,
     ) -> Result<T, CleanroomError>
     where
         F: Fn() -> Fut,

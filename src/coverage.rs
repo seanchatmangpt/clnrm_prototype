@@ -151,8 +151,8 @@ mod tests {
         let session_id = Uuid::new_v4();
         let mut collector = CoverageCollector::new(session_id);
 
-        collector.start_collection().unwrap();
-        let data = collector.stop_collection().unwrap();
+        collector.start_collection().expect("Operation failed");
+        let data = collector.stop_collection().expect("Operation failed");
         assert!(!collector.is_collecting());
         assert_eq!(data.overall_coverage_percentage, 0.0);
     }
@@ -162,14 +162,14 @@ mod tests {
         let session_id = Uuid::new_v4();
         let mut collector = CoverageCollector::new(session_id);
 
-        collector.start_collection().unwrap();
+        collector.start_collection().expect("Operation failed");
         collector
             .update_coverage_data(|data| {
                 data.overall_coverage_percentage = 85.5;
             })
-            .unwrap();
+            .expect("Operation failed");
 
-        let data = collector.get_coverage_data().unwrap();
+        let data = collector.get_coverage_data().expect("Operation failed");
         assert_eq!(data.overall_coverage_percentage, 85.5);
     }
 
@@ -198,8 +198,8 @@ mod tests {
         data.branch_coverage_percentage = 70.0;
         data.function_coverage_percentage = 85.0;
 
-        let json = serde_json::to_string(&data).unwrap();
-        let deserialized: CoverageData = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&data).expect("Operation failed");
+        let deserialized: CoverageData = serde_json::from_str(&json).expect("Operation failed");
 
         assert_eq!(data.session_id, deserialized.session_id);
         assert_eq!(
@@ -354,7 +354,7 @@ mod tests {
         let session_id = Uuid::new_v4();
         let mut collector = CoverageCollector::new(session_id);
 
-        collector.start_collection().unwrap();
+        collector.start_collection().expect("Operation failed");
         let result = collector.start_collection();
 
         assert!(result.is_err());
@@ -404,7 +404,7 @@ mod tests {
         let session_id = Uuid::new_v4();
         let mut collector = CoverageCollector::new(session_id);
 
-        collector.start_collection().unwrap();
+        collector.start_collection().expect("Operation failed");
 
         // First update
         collector
@@ -412,7 +412,7 @@ mod tests {
                 data.overall_coverage_percentage = 50.0;
                 data.add_file("src/main.rs".to_string(), 100, 50);
             })
-            .unwrap();
+            .expect("Operation failed");
 
         // Second update
         collector
@@ -420,9 +420,9 @@ mod tests {
                 data.overall_coverage_percentage = 75.0;
                 data.add_file("src/lib.rs".to_string(), 200, 150);
             })
-            .unwrap();
+            .expect("Operation failed");
 
-        let data = collector.get_coverage_data().unwrap();
+        let data = collector.get_coverage_data().expect("Operation failed");
         assert_eq!(data.overall_coverage_percentage, 75.0);
         assert_eq!(data.coverage_files.len(), 2);
         assert_eq!(data.coverage_files.get("src/main.rs"), Some(&(100, 50)));
@@ -434,16 +434,16 @@ mod tests {
         let session_id = Uuid::new_v4();
         let mut collector = CoverageCollector::new(session_id);
 
-        collector.start_collection().unwrap();
+        collector.start_collection().expect("Operation failed");
         collector
             .update_coverage_data(|data| {
                 data.overall_coverage_percentage = 85.5;
                 data.line_coverage_percentage = 90.0;
             })
-            .unwrap();
+            .expect("Operation failed");
 
-        let json = serde_json::to_string(&collector).unwrap();
-        let deserialized: CoverageCollector = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&collector).expect("Operation failed");
+        let deserialized: CoverageCollector = serde_json::from_str(&json).expect("Operation failed");
 
         assert_eq!(collector.session_id, deserialized.session_id);
         assert_eq!(collector.is_collecting(), deserialized.is_collecting());

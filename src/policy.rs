@@ -331,7 +331,9 @@ impl Policy {
 
     /// Create a policy with custom resource limits
     pub fn with_resource_limits(
-        max_cpu_percent: f64, max_memory_bytes: u64, max_disk_bytes: u64,
+        max_cpu_percent: f64,
+        max_memory_bytes: u64,
+        max_disk_bytes: u64,
     ) -> Self {
         let mut policy = Self::default();
         policy.resources.max_cpu_usage_percent = max_cpu_percent;
@@ -425,7 +427,9 @@ impl Policy {
 
     /// Check if operation is allowed by policy
     pub fn is_operation_allowed(
-        &self, _operation: &str, context: &HashMap<String, String>,
+        &self,
+        _operation: &str,
+        context: &HashMap<String, String>,
     ) -> Result<bool> {
         // Check security policy
         if self.security.enable_network_isolation {

@@ -275,13 +275,13 @@ pub mod tracing;
 pub mod services;
 
 // Re-exports for convenience
+pub use crate::cleanroom::{
+    CleanroomEnvironment, CleanroomGuard, ContainerMetrics, ContainerStatus, ContainerWrapper,
+};
 pub use artifacts::{ArtifactCollector, ForensicsBundle};
 pub use assertions::Assert;
 pub use attest::{Attestation, AttestationGenerator};
 pub use backend::{AutoBackend, Backend, Cmd};
-pub use crate::cleanroom::{
-    CleanroomEnvironment, CleanroomGuard, ContainerMetrics, ContainerStatus, ContainerWrapper,
-};
 pub use config::CleanroomConfig;
 pub use container_base::{BaseContainer, ContainerBase};
 pub use containers::{GenericContainer, PostgresContainer, RedisContainer};
@@ -433,7 +433,7 @@ where
     }
 
     let cmd =
-        Cmd::new(&args_vec[0]).args(&args_vec[1..].iter().map(|s| s.as_str()).collect::<Vec<_>>());
+        Cmd::new(&args_vec[0]).args(args_vec.get(1..).unwrap_or(&[]).iter().map(|s| s.as_str()).collect::<Vec<_>>());
     let backend_result = backend.run_cmd(cmd)?;
 
     Ok(RunResult {
@@ -583,7 +583,7 @@ where
     }
 
     let cmd = Cmd::new(&args_vec[0])
-        .args(&args_vec[1..].iter().map(|s| s.as_str()).collect::<Vec<_>>())
+        .args(args_vec.get(1..).unwrap_or(&[]).iter().map(|s| s.as_str()).collect::<Vec<_>>())
         .env("CLEANROOM_POLICY", serde_json::to_string(policy)?);
 
     let backend_result = backend.run_cmd(cmd)?;
@@ -605,6 +605,9 @@ where
 mod tests {
     use super::*;
     use crate::backend::TestcontainerBackend;
+    
+    // Allow unwrap/expect in tests as they are expected to panic on failure
+    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::get_first)]
 
     #[test]
     fn test_run_echo() {

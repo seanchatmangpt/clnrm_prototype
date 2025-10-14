@@ -3,8 +3,8 @@
 //! This example shows how to use the ConcurrencyOrchestrator to manage
 //! concurrent tasks with proper cancellation, timeout handling, and resource cleanup.
 
-use clnrm::CleanroomEnvironment;
 use clnrm::Result;
+use clnrm::CleanroomEnvironment;
 use std::time::Duration;
 use tokio::time::sleep;
 

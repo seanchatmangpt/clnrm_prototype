@@ -3,10 +3,10 @@
 //! Configuration structures for lifecycle management system.
 //! Supports TOML-based configuration compatible with cargo-make format.
 
+use crate::error::{CleanroomError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
-use crate::error::{Result, CleanroomError};
 
 /// Main lifecycle configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -211,7 +211,9 @@ impl LifecycleConfig {
     pub async fn load(path: impl AsRef<Path>) -> Result<Self> {
         let content = tokio::fs::read_to_string(path.as_ref())
             .await
-            .map_err(|e| CleanroomError::io_error(format!("Failed to read lifecycle config: {}", e)))?;
+            .map_err(|e| {
+                CleanroomError::io_error(format!("Failed to read lifecycle config: {}", e))
+            })?;
 
         let config: Self = toml::from_str(&content)
             .map_err(|e| CleanroomError::config_error(format!("Invalid TOML: {}", e)))?;
@@ -224,12 +226,15 @@ impl LifecycleConfig {
     pub async fn save(&self, path: impl AsRef<Path>) -> Result<()> {
         self.validate()?;
 
-        let content = toml::to_string_pretty(self)
-            .map_err(|e| CleanroomError::config_error(format!("Failed to serialize config: {}", e)))?;
+        let content = toml::to_string_pretty(self).map_err(|e| {
+            CleanroomError::config_error(format!("Failed to serialize config: {}", e))
+        })?;
 
         tokio::fs::write(path.as_ref(), content)
             .await
-            .map_err(|e| CleanroomError::io_error(format!("Failed to write lifecycle config: {}", e)))?;
+            .map_err(|e| {
+                CleanroomError::io_error(format!("Failed to write lifecycle config: {}", e))
+            })?;
 
         Ok(())
     }
@@ -296,40 +301,49 @@ impl LifecycleConfig {
     fn default_environments() -> HashMap<String, EnvironmentConfig> {
         let mut envs = HashMap::new();
 
-        envs.insert("dev".to_string(), EnvironmentConfig {
-            name: "dev".to_string(),
-            endpoint: Some("http://localhost:8080".to_string()),
-            variables: HashMap::new(),
-            deploy_command: None,
-            validation_checks: vec![],
-            required_services: vec![],
-        });
+        envs.insert(
+            "dev".to_string(),
+            EnvironmentConfig {
+                name: "dev".to_string(),
+                endpoint: Some("http://localhost:8080".to_string()),
+                variables: HashMap::new(),
+                deploy_command: None,
+                validation_checks: vec![],
+                required_services: vec![],
+            },
+        );
 
-        envs.insert("staging".to_string(), EnvironmentConfig {
-            name: "staging".to_string(),
-            endpoint: Some("https://staging.example.com".to_string()),
-            variables: HashMap::new(),
-            deploy_command: Some("cargo build --release".to_string()),
-            validation_checks: vec!["health_check".to_string()],
-            required_services: vec!["database".to_string()],
-        });
+        envs.insert(
+            "staging".to_string(),
+            EnvironmentConfig {
+                name: "staging".to_string(),
+                endpoint: Some("https://staging.example.com".to_string()),
+                variables: HashMap::new(),
+                deploy_command: Some("cargo build --release".to_string()),
+                validation_checks: vec!["health_check".to_string()],
+                required_services: vec!["database".to_string()],
+            },
+        );
 
-        envs.insert("production".to_string(), EnvironmentConfig {
-            name: "production".to_string(),
-            endpoint: Some("https://api.example.com".to_string()),
-            variables: HashMap::new(),
-            deploy_command: Some("cargo build --release".to_string()),
-            validation_checks: vec![
-                "health_check".to_string(),
-                "security_audit".to_string(),
-                "performance_test".to_string(),
-            ],
-            required_services: vec![
-                "database".to_string(),
-                "cache".to_string(),
-                "monitoring".to_string(),
-            ],
-        });
+        envs.insert(
+            "production".to_string(),
+            EnvironmentConfig {
+                name: "production".to_string(),
+                endpoint: Some("https://api.example.com".to_string()),
+                variables: HashMap::new(),
+                deploy_command: Some("cargo build --release".to_string()),
+                validation_checks: vec![
+                    "health_check".to_string(),
+                    "security_audit".to_string(),
+                    "performance_test".to_string(),
+                ],
+                required_services: vec![
+                    "database".to_string(),
+                    "cache".to_string(),
+                    "monitoring".to_string(),
+                ],
+            },
+        );
 
         envs
     }
@@ -379,11 +393,15 @@ impl LifecycleConfig {
     /// Validate configuration
     pub fn validate(&self) -> Result<()> {
         if self.project_name.is_empty() {
-            return Err(CleanroomError::validation_error("Project name cannot be empty"));
+            return Err(CleanroomError::validation_error(
+                "Project name cannot be empty",
+            ));
         }
 
         if self.phases.is_empty() {
-            return Err(CleanroomError::validation_error("At least one phase is required"));
+            return Err(CleanroomError::validation_error(
+                "At least one phase is required",
+            ));
         }
 
         // Validate phase dependencies
@@ -391,9 +409,10 @@ impl LifecycleConfig {
         for phase in &self.phases {
             for dep in &phase.dependencies {
                 if !phase_names.contains(&dep.as_str()) {
-                    return Err(CleanroomError::validation_error(
-                        format!("Phase '{}' depends on unknown phase '{}'", phase.name, dep)
-                    ));
+                    return Err(CleanroomError::validation_error(format!(
+                        "Phase '{}' depends on unknown phase '{}'",
+                        phase.name, dep
+                    )));
                 }
             }
         }
@@ -401,9 +420,10 @@ impl LifecycleConfig {
         // Validate requirement priorities
         for req in &self.readiness_requirements {
             if req.priority < 1 || req.priority > 5 {
-                return Err(CleanroomError::validation_error(
-                    format!("Requirement '{}' has invalid priority (must be 1-5)", req.name)
-                ));
+                return Err(CleanroomError::validation_error(format!(
+                    "Requirement '{}' has invalid priority (must be 1-5)",
+                    req.name
+                )));
             }
         }
 

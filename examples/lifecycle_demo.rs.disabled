@@ -7,8 +7,8 @@
 //! - Environment validation
 //! - Deployment with checks
 
-use clnrm::CleanroomConfig;
 use clnrm::CleanroomEnvironment;
+use clnrm::CleanroomConfig;
 use std::sync::Arc;
 
 #[tokio::main]
@@ -21,10 +21,7 @@ async fn main() -> anyhow::Result<()> {
     println!("   ✓ Created lifecycle config for: {}", config.project_name);
     println!("   ✓ Phases: {}", config.phases.len());
     println!("   ✓ Environments: {}", config.environments.len());
-    println!(
-        "   ✓ Requirements: {}\n",
-        config.readiness_requirements.len()
-    );
+    println!("   ✓ Requirements: {}\n", config.readiness_requirements.len());
 
     // 2. Create lifecycle manager (without cleanroom for this demo)
     println!("🏗️  Step 2: Create Lifecycle Manager");
@@ -64,16 +61,12 @@ async fn main() -> anyhow::Result<()> {
     println!("✅ Step 4: Complete Some Requirements");
     if !config.readiness_requirements.is_empty() {
         let first_req = &config.readiness_requirements[0];
-        manager
-            .update_requirement(&first_req.id, Status::Complete)
-            .await?;
+        manager.update_requirement(&first_req.id, Status::Complete).await?;
         println!("   ✓ Completed: {}", first_req.name);
 
         if config.readiness_requirements.len() > 1 {
             let second_req = &config.readiness_requirements[1];
-            manager
-                .update_requirement(&second_req.id, Status::InProgress)
-                .await?;
+            manager.update_requirement(&second_req.id, Status::InProgress).await?;
             println!("   ⏳ In Progress: {}", second_req.name);
         }
     }
@@ -85,10 +78,8 @@ async fn main() -> anyhow::Result<()> {
     println!("   📈 Updated Score: {}/100", updated_readiness.score);
 
     if updated_readiness.score > initial_readiness.score {
-        println!(
-            "   ✨ Readiness improved by {} points!",
-            updated_readiness.score - initial_readiness.score
-        );
+        println!("   ✨ Readiness improved by {} points!",
+            updated_readiness.score - initial_readiness.score);
     }
 
     println!("   📊 Category Breakdown:");
@@ -103,8 +94,7 @@ async fn main() -> anyhow::Result<()> {
         if let Some(_env) = config.get_environment(env_name) {
             match manager.validate(env_name).await {
                 Ok(report) => {
-                    println!(
-                        "   {} Environment: {}",
+                    println!("   {} Environment: {}",
                         if report.passed { "✓" } else { "✗" },
                         env_name
                     );
@@ -126,25 +116,12 @@ async fn main() -> anyhow::Result<()> {
     // 7. Display deployment readiness
     println!("🚢 Step 7: Deployment Readiness Assessment");
     let can_deploy_staging = updated_readiness.score >= 60;
-    let can_deploy_production =
-        updated_readiness.score >= 80 && updated_readiness.blockers.is_empty();
+    let can_deploy_production = updated_readiness.score >= 80 && updated_readiness.blockers.is_empty();
 
-    println!(
-        "   Staging:    {} (requires 60% readiness)",
-        if can_deploy_staging {
-            "✓ READY"
-        } else {
-            "✗ NOT READY"
-        }
-    );
-    println!(
-        "   Production: {} (requires 80% readiness + no blockers)",
-        if can_deploy_production {
-            "✓ READY"
-        } else {
-            "✗ NOT READY"
-        }
-    );
+    println!("   Staging:    {} (requires 60% readiness)",
+        if can_deploy_staging { "✓ READY" } else { "✗ NOT READY" });
+    println!("   Production: {} (requires 80% readiness + no blockers)",
+        if can_deploy_production { "✓ READY" } else { "✗ NOT READY" });
     println!();
 
     // 8. Summary
@@ -153,8 +130,7 @@ async fn main() -> anyhow::Result<()> {
     println!("   Readiness Score: {}/100", updated_readiness.score);
     println!("   Blockers: {}", updated_readiness.blockers.len());
     println!("   Warnings: {}", updated_readiness.warnings.len());
-    println!(
-        "   Status: {}",
+    println!("   Status: {}",
         if can_deploy_production {
             "🎉 READY FOR PRODUCTION"
         } else {
