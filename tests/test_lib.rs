@@ -18,6 +18,7 @@ pub mod test_utils {
     use std::sync::Arc;
     use std::time::Duration;
     use tokio::time::timeout;
+    use clnrm::conditional_sleep;
 
     /// Create a test cleanroom environment with default configuration
     pub async fn create_test_environment() -> Result<Arc<CleanroomEnvironment>, CleanroomError> {
@@ -53,7 +54,8 @@ pub mod test_utils {
             if condition().await {
                 return Ok(true);
             }
-            tokio::time::sleep(Duration::from_millis(10)).await;
+            // Use conditional sleep for faster tests
+            conditional_sleep(Duration::from_millis(1)).await;
         }
         Ok(false)
     }

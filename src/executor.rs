@@ -8,6 +8,8 @@
 //!
 //! ```rust
 //! use crate::cleanroom::executor::AsyncExecutor;
+
+use crate::test_utils::mock_time::conditional_sleep;
 //! use std::time::Duration;
 //!
 //! let executor = AsyncExecutor::new(environment);
@@ -299,7 +301,7 @@ mod tests {
         
         let result = executor.run_async_with_timeout(
             async {
-                tokio::time::sleep(Duration::from_millis(100)).await;
+                conditional_sleep(Duration::from_millis(100)).await;
                 Ok::<i32, crate::error::CleanroomError>(42)
             },
             Duration::from_millis(200)
@@ -317,7 +319,7 @@ mod tests {
         
         let result = executor.run_async_with_timeout(
             async {
-                tokio::time::sleep(Duration::from_millis(200)).await;
+                conditional_sleep(Duration::from_millis(200)).await;
                 Ok::<i32, crate::error::CleanroomError>(42)
             },
             Duration::from_millis(100)

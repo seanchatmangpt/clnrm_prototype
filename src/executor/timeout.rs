@@ -4,6 +4,7 @@
 //! including exponential backoff, retry mechanisms, and timeout strategies.
 
 use crate::error::{Result, CleanroomError};
+use crate::test_utils::mock_time::conditional_sleep;
 use std::time::Duration;
 use std::future::Future;
 use tokio::time::{timeout, sleep, Instant};
@@ -407,7 +408,7 @@ mod tests {
         let executor = TimeoutExecutor::new(config);
         
         let result = executor.execute_with_retry(async {
-            tokio::time::sleep(Duration::from_millis(50)).await;
+            conditional_sleep(Duration::from_millis(50)).await;
             Ok::<i32, CleanroomError>(42)
         }).await;
         
@@ -432,7 +433,7 @@ mod tests {
         assert!(!breaker.can_execute());
         
         // Wait for timeout
-        tokio::time::sleep(Duration::from_millis(150)).await;
+        conditional_sleep(Duration::from_millis(150)).await;
         
         // Should be half-open now
         assert!(breaker.can_execute());
@@ -452,7 +453,7 @@ mod tests {
         let previous_duration = Some(Duration::from_millis(100));
         let result = executor.execute_adaptive(
             async {
-                tokio::time::sleep(Duration::from_millis(50)).await;
+                conditional_sleep(Duration::from_millis(50)).await;
                 Ok::<i32, CleanroomError>(42)
             },
             previous_duration,

@@ -382,7 +382,7 @@ mod builder_tests {
     fn test_cleanroom_builder_with_timeout() {
         let builder = CleanroomBuilder::new()
             .unwrap()
-            .with_timeout(Duration::from_secs(60));
+            .with_timeout(Duration::from_millis(50));
         assert!(builder.is_ok());
     }
 
@@ -437,13 +437,13 @@ mod executor_tests {
 
     #[test]
     fn test_timeout_executor_creation() {
-        let executor = TimeoutExecutor::new(Duration::from_secs(30));
+        let executor = TimeoutExecutor::new(Duration::from_millis(50));
         assert!(executor.is_ok());
     }
 
     #[test]
     fn test_timeout_executor_with_retry() {
-        let executor = TimeoutExecutor::new(Duration::from_secs(30))
+        let executor = TimeoutExecutor::new(Duration::from_secs(5))
             .unwrap()
             .with_retry(3);
         assert!(executor.is_ok());
@@ -567,7 +567,7 @@ mod orchestrator_tests {
     fn test_orchestrator_with_timeout() {
         let orchestrator = ConcurrencyOrchestrator::new()
             .unwrap()
-            .with_global_timeout(Duration::from_secs(60));
+            .with_global_timeout(Duration::from_millis(50));
         assert!(orchestrator.is_ok());
     }
 }

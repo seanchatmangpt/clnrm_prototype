@@ -261,6 +261,7 @@ pub mod limits;
 pub mod macros;
 pub mod metrics_builder;
 pub mod observability;
+pub mod otel;
 pub mod policy;
 pub mod report;
 pub mod runtime;
@@ -304,7 +305,15 @@ pub use scenario::{scenario, RunResult, Scenario};
 pub use snapshots::SnapshotManager;
 // pub use streaming::{ArtifactStream, StreamingCollector, ArtifactData, ArtifactMetadata, ArtifactType}; // Temporarily disabled
 pub use test_utils::{TestContainerHelper, TestEnvironmentBuilder};
+pub use test_utils::mock_time::{conditional_sleep, conditional_timeout, MockTime, MockTimeTestEnv};
 pub use tracing::TracingManager;
+
+// OpenTelemetry exports
+pub use otel::{OtelManager, OtelConfig};
+pub use otel::tracing::{OtelTracingManager, TracingConfig, SpanStatus};
+pub use otel::metrics::{OtelMetricsManager, MetricsConfig};
+pub use otel::logging::{OtelLoggingManager, LoggingConfig, LogLevel};
+pub use otel::exporters::{ExportersConfig, ExporterBuilder};
 
 /// Create a new cleanroom environment with default configuration.
 ///

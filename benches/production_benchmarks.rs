@@ -668,8 +668,8 @@ fn bench_orchestrator_stats_collection(c: &mut Criterion) {
 criterion_group!(
     name = container_lifecycle;
     config = Criterion::default()
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(10));
+        .sample_size(20)
+        .measurement_time(Duration::from_secs(2));
     targets =
         bench_environment_creation,
         bench_environment_creation_with_config,
@@ -682,8 +682,8 @@ criterion_group!(
 criterion_group!(
     name = test_execution;
     config = Criterion::default()
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(10));
+        .sample_size(20)
+        .measurement_time(Duration::from_secs(2));
     targets =
         bench_simple_test_execution,
         bench_test_execution_with_metrics,
@@ -695,8 +695,8 @@ criterion_group!(
 criterion_group!(
     name = memory_usage;
     config = Criterion::default()
-        .sample_size(50)
-        .measurement_time(Duration::from_secs(10));
+        .sample_size(10)
+        .measurement_time(Duration::from_secs(2));
     targets =
         bench_environment_memory_allocation,
         bench_memory_usage_multiple_containers,
@@ -706,8 +706,8 @@ criterion_group!(
 criterion_group!(
     name = io_performance;
     config = Criterion::default()
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(10));
+        .sample_size(20)
+        .measurement_time(Duration::from_secs(2));
     targets =
         bench_container_registry_read,
         bench_container_registry_write,
@@ -718,8 +718,8 @@ criterion_group!(
 criterion_group!(
     name = async_performance;
     config = Criterion::default()
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(10));
+        .sample_size(20)
+        .measurement_time(Duration::from_secs(2));
     targets =
         bench_async_task_spawning_overhead,
         bench_async_context_switching,
@@ -730,8 +730,8 @@ criterion_group!(
 criterion_group!(
     name = singleton_pattern;
     config = Criterion::default()
-        .sample_size(50)
-        .measurement_time(Duration::from_secs(10));
+        .sample_size(10)
+        .measurement_time(Duration::from_secs(2));
     targets =
         bench_container_startup_baseline,
         bench_container_lookup_singleton,

@@ -2,6 +2,7 @@
 
 use crate::error::Result;
 use crate::cleanroom::CleanroomEnvironment;
+use crate::test_utils::mock_time::conditional_sleep;
 use std::sync::Arc;
 use std::collections::HashMap;
 use std::time::Instant;
@@ -490,7 +491,7 @@ mod tests {
         drop(guard);
         
         // Give a moment for cleanup to execute
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        conditional_sleep(tokio::time::Duration::from_millis(1)).await;
         assert_eq!(counter.load(Ordering::SeqCst), 1);
     }
 
@@ -569,7 +570,7 @@ mod tests {
         drop(guard);
         
         // Give a moment for cleanup to execute
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        conditional_sleep(tokio::time::Duration::from_millis(1)).await;
         assert_eq!(counter.load(Ordering::SeqCst), 5);
     }
 }

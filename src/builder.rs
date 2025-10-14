@@ -30,7 +30,7 @@
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Create environment with basic configuration
 //!     let environment = CleanroomBuilder::new()
-//!         .with_timeout(Duration::from_secs(60))
+//!         .with_timeout(Duration::from_secs(5))
 //!         .build()
 //!         .await?;
 //!
@@ -123,7 +123,7 @@ use std::time::Duration;
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     // Type-safe configuration
 ///     let environment = CleanroomBuilder::new()
-///         .with_timeout(Duration::from_secs(60))
+///         .with_timeout(Duration::from_secs(5))
 ///         .build()
 ///         .await?;
 ///
@@ -378,7 +378,7 @@ impl CleanroomBuilder<Initial> {
     /// Create a high-performance environment with optimized settings
     pub fn performance() -> CleanroomBuilder<Ready> {
         Self::new()
-            .with_timeout(Duration::from_secs(60))
+            .with_timeout(Duration::from_secs(5))
             .with_singleton_containers(true)
     }
 
@@ -408,12 +408,12 @@ mod tests {
             .await
             .expect("Should build minimal environment");
         
-        assert_eq!(env.config().test_execution_timeout, Duration::from_secs(300));
+        assert_eq!(env.config().test_execution_timeout, Duration::from_secs(10));
     }
 
     #[tokio::test]
     async fn test_builder_with_timeout() {
-        let timeout = Duration::from_secs(60);
+        let timeout = Duration::from_secs(5);
         let env = CleanroomBuilder::new()
             .with_timeout(timeout)
             .build()
@@ -481,7 +481,7 @@ mod tests {
             .await
             .expect("Should build performance environment");
         
-        assert_eq!(env.config().test_execution_timeout, Duration::from_secs(60));
+        assert_eq!(env.config().test_execution_timeout, Duration::from_secs(5));
         assert!(env.config().enable_singleton_containers);
     }
 }

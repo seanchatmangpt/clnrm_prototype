@@ -8,6 +8,9 @@ use crate::config::CleanroomConfig;
 use crate::error::Result;
 use std::time::Duration;
 
+/// Mock time utilities for fast, deterministic tests
+pub mod mock_time;
+
 /// Test environment builder
 ///
 /// This builder eliminates repetitive test environment setup patterns.

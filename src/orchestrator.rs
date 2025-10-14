@@ -5,6 +5,7 @@
 
 use crate::error::Result;
 use crate::cleanroom::CleanroomEnvironment;
+use crate::test_utils::mock_time::conditional_sleep;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{JoinSet, mpsc, oneshot};
@@ -566,7 +567,7 @@ mod tests {
         orchestrator.create_task_group("test_group".to_string(), group_config).unwrap();
         
         let task = Task::new("test_task".to_string(), || async {
-            tokio::time::sleep(Duration::from_millis(50)).await;
+            conditional_sleep(Duration::from_millis(50)).await;
             Ok(TaskResult {
                 task_name: "test_task".to_string(),
                 status: TaskStatus::Completed,

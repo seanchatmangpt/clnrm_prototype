@@ -5,6 +5,7 @@
 
 use crate::error::Result;
 use crate::cleanroom::CleanroomEnvironment;
+use crate::test_utils::mock_time::conditional_sleep;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::RwLock;
@@ -504,7 +505,7 @@ mod tests {
         assert!(guard.is_registered().await);
         
         // Let it run for a bit
-        tokio::time::sleep(Duration::from_millis(250)).await;
+        conditional_sleep(Duration::from_millis(250)).await;
         
         // Guard will be dropped here, stopping health monitoring
     }

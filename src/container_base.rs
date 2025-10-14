@@ -8,6 +8,7 @@
 use crate::cleanroom::{ContainerMetrics, ContainerStatus};
 use crate::error::Result;
 use crate::policy::Policy;
+use crate::test_utils::mock_time::conditional_sleep;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::RwLock;
@@ -102,7 +103,7 @@ impl ContainerBase {
                 return Ok(());
             }
 
-            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            conditional_sleep(std::time::Duration::from_millis(100)).await;
         }
 
         Err(crate::error_helpers::timeout_error(
@@ -257,7 +258,7 @@ mod tests {
         let base = ContainerBase::new();
 
         // Wait a bit to ensure uptime > 0
-        tokio::time::sleep(Duration::from_millis(10)).await;
+        conditional_sleep(Duration::from_millis(10)).await;
 
         base.update_uptime().await.unwrap();
         let metrics = base.get_metrics().await;

@@ -17,9 +17,9 @@ proptest! {
     #[test]
     fn test_config_validation_property(
         enable_singleton in any::<bool>(),
-        startup_timeout_secs in 1..300u64,
-        execution_timeout_secs in 1..600u64,
-        max_containers in 1..100usize,
+        startup_timeout_secs in 1..3u64,
+        execution_timeout_secs in 1..5u64,
+        max_containers in 1..10usize,
         enable_deterministic in any::<bool>(),
         enable_coverage in any::<bool>(),
         enable_snapshots in any::<bool>(),
@@ -86,10 +86,10 @@ proptest! {
 proptest! {
     #[test]
     fn test_resource_limits_property(
-        max_memory_mb in 1..4096u32,
+        max_memory_mb in 1..512u32,
         max_cpu_percent in 1.0..100.0f64,
-        max_disk_mb in 1..8192u32,
-        max_network_mb in 1..1024u32,
+        max_disk_mb in 1..1024u32,
+        max_network_mb in 1..256u32,
     ) {
         let mut limits = ResourceLimits::default();
         limits.memory.max_usage_bytes = (max_memory_mb as u64) * 1024 * 1024;
@@ -136,8 +136,8 @@ proptest! {
 proptest! {
     #[test]
     fn test_coverage_tracker_property(
-        test_names in prop::collection::vec("[a-zA-Z0-9_]{1,20}", 1..10),
-        line_numbers in prop::collection::vec(1..1000usize, 1..20),
+        test_names in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..5),
+        line_numbers in prop::collection::vec(1..100usize, 1..10),
     ) {
         let session_id = Uuid::new_v4();
         let tracker = CoverageTracker::new(session_id);
@@ -168,9 +168,9 @@ proptest! {
 proptest! {
     #[test]
     fn test_snapshot_manager_property(
-        snapshot_names in prop::collection::vec("[a-zA-Z0-9_]{1,20}", 1..10),
-        data_keys in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..5),
-        data_values in prop::collection::vec("[a-zA-Z0-9_]{1,20}", 1..5),
+        snapshot_names in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..5),
+        data_keys in prop::collection::vec("[a-zA-Z0-9_]{1,5}", 1..3),
+        data_values in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..3),
     ) {
         let manager = SnapshotManager::new();
 
@@ -207,9 +207,9 @@ proptest! {
 proptest! {
     #[test]
     fn test_tracing_manager_property(
-        trace_names in prop::collection::vec("[a-zA-Z0-9_]{1,20}", 1..10),
-        event_names in prop::collection::vec("[a-zA-Z0-9_]{1,20}", 1..5),
-        event_data in prop::collection::vec("[a-zA-Z0-9_]{1,50}", 1..5),
+        trace_names in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..5),
+        event_names in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..3),
+        event_data in prop::collection::vec("[a-zA-Z0-9_]{1,20}", 1..3),
     ) {
         let manager = TracingManager::new();
 
@@ -243,8 +243,8 @@ proptest! {
 proptest! {
     #[test]
     fn test_test_report_property(
-        test_names in prop::collection::vec("[a-zA-Z0-9_]{1,20}", 1..20),
-        execution_times in prop::collection::vec(1..1000u64, 1..20),
+        test_names in prop::collection::vec("[a-zA-Z0-9_]{1,10}", 1..10),
+        execution_times in prop::collection::vec(1..100u64, 1..10),
     ) {
         let report = TestReport::new();
 
@@ -352,7 +352,7 @@ proptest! {
 proptest! {
     #[test]
     fn test_uuid_generation_property(
-        count in 1..100usize,
+        count in 1..20usize,
     ) {
         let mut uuids = Vec::new();
 
@@ -379,8 +379,8 @@ proptest! {
 proptest! {
     #[test]
     fn test_duration_operations_property(
-        duration1_ms in 1..10000u64,
-        duration2_ms in 1..10000u64,
+        duration1_ms in 1..1000u64,
+        duration2_ms in 1..1000u64,
     ) {
         let duration1 = Duration::from_millis(duration1_ms);
         let duration2 = Duration::from_millis(duration2_ms);

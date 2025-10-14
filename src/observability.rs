@@ -3,6 +3,7 @@
 use crate::error::Result;
 use crate::cleanroom::CleanroomEnvironment;
 use crate::serializable_instant::SerializableInstant;
+use crate::test_utils::mock_time::conditional_sleep;
 use std::sync::Arc;
 use std::collections::HashMap;
 use tokio::sync::RwLock;
@@ -681,7 +682,7 @@ mod tests {
         manager.start_metrics_collection().await.unwrap();
         
         // Let it collect some metrics
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        conditional_sleep(std::time::Duration::from_millis(1)).await;
         
         let history = manager.get_metrics_history().await;
         assert!(!history.is_empty());

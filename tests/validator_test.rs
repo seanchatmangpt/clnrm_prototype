@@ -80,7 +80,7 @@ fn test_validator_on_cleanroom_project() {
     let output = Command::new(&script)
         .arg("-v") // Verbose mode
         .arg("-t")
-        .arg("30") // 30 second timeout for safety
+        .arg("5") // 5 second timeout for safety
         .current_dir(project_root())
         .output()
         .unwrap_or_else(|e| panic!("Failed to run validator: {}", e));
@@ -129,7 +129,7 @@ fn test_validator_generates_report() {
         .arg("-o")
         .arg(&report_path)
         .arg("-t")
-        .arg("30")
+        .arg("5")
         .current_dir(project_root())
         .output()
         .unwrap_or_else(|e| panic!("Failed to run validator: {}", e));
@@ -192,7 +192,7 @@ fn test_validator_completes_in_time() {
 
     let output = Command::new(&script)
         .arg("-t")
-        .arg("10") // 10 second timeout
+        .arg("3") // 3 second timeout
         .current_dir(project_root())
         .output()
         .unwrap_or_else(|e| panic!("Failed to run validator: {}", e));
@@ -201,10 +201,10 @@ fn test_validator_completes_in_time() {
 
     println!("Validator completed in {:.2}s", duration.as_secs_f64());
 
-    // Should complete within 15 seconds (10s target + 5s buffer)
+    // Should complete within 5 seconds (3s target + 2s buffer)
     assert!(
-        duration.as_secs() < 15,
-        "Validator should complete within 15 seconds, took {}s",
+        duration.as_secs() < 5,
+        "Validator should complete within 5 seconds, took {}s",
         duration.as_secs()
     );
 

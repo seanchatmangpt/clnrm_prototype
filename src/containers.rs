@@ -9,6 +9,8 @@
 
 #![allow(clippy::panic)]
 
+use crate::test_utils::mock_time::conditional_sleep;
+
 use crate::cleanroom::{ContainerMetrics, ContainerStatus, ContainerWrapper};
 use crate::container_base::{BaseContainer, ContainerBase};
 use crate::error::{CleanroomError, Result};
@@ -102,7 +104,7 @@ impl PostgresContainer {
         self.base.set_status(ContainerStatus::Ready).await?;
 
         // Wait for PostgreSQL to be ready
-        tokio::time::sleep(Duration::from_secs(5)).await;
+        conditional_sleep(Duration::from_secs(5)).await;
 
         // Test connection
         self.test_connection().await?;
@@ -278,7 +280,7 @@ impl RedisContainer {
         self.base.set_status(ContainerStatus::Ready).await?;
 
         // Wait for Redis to be ready
-        tokio::time::sleep(Duration::from_secs(2)).await;
+        conditional_sleep(Duration::from_secs(2)).await;
 
         // Test connection
         self.test_connection().await?;
@@ -461,7 +463,7 @@ impl GenericContainer {
         self.base.set_status(ContainerStatus::Ready).await?;
 
         // Wait for container to be ready
-        tokio::time::sleep(Duration::from_secs(3)).await;
+        conditional_sleep(Duration::from_secs(3)).await;
 
         Ok(())
     }

@@ -29,7 +29,7 @@ impl<T> Id<T> {
         // Safety: fastrand::u64(1..) guarantees a value >= 1, making this safe
         let value = fastrand::u64(1..);
         // SAFETY: fastrand::u64(1..) never returns 0, so this is always safe
-        let non_zero = unsafe { NonZeroU64::new_unchecked(value) };
+        let non_zero = NonZeroU64::new(value).expect("Value must be non-zero");
         Self(non_zero, std::marker::PhantomData)
     }
 

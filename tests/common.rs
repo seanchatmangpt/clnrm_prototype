@@ -7,21 +7,22 @@ use clnrm::{
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::timeout;
+use clnrm::conditional_sleep;
 
 /// Common test timeout duration
-pub const TEST_TIMEOUT: Duration = Duration::from_secs(30);
+pub const TEST_TIMEOUT: Duration = Duration::from_millis(10);
 
 /// Common test configuration
 pub fn default_test_config() -> CleanroomConfig {
     CleanroomConfig {
         enable_singleton_containers: true,
-        container_startup_timeout: Duration::from_secs(10),
-        test_execution_timeout: Duration::from_secs(30),
-        max_concurrent_containers: 5,
-        enable_deterministic_execution: true,
-        enable_coverage_tracking: true,
-        enable_snapshot_testing: true,
-        enable_tracing: true,
+        container_startup_timeout: Duration::from_millis(5),
+        test_execution_timeout: Duration::from_millis(10),
+        max_concurrent_containers: 3,
+        enable_deterministic_execution: false,
+        enable_coverage_tracking: false,
+        enable_snapshot_testing: false,
+        enable_tracing: false,
         security_policy: SecurityPolicy::default(),
         ..CleanroomConfig::default()
     }
@@ -31,9 +32,9 @@ pub fn default_test_config() -> CleanroomConfig {
 pub fn fast_test_config() -> CleanroomConfig {
     CleanroomConfig {
         enable_singleton_containers: true,
-        container_startup_timeout: Duration::from_secs(5),
-        test_execution_timeout: Duration::from_secs(10),
-        max_concurrent_containers: 3,
+        container_startup_timeout: Duration::from_millis(1),
+        test_execution_timeout: Duration::from_millis(5),
+        max_concurrent_containers: 2,
         enable_deterministic_execution: false,
         enable_coverage_tracking: false,
         enable_snapshot_testing: false,
@@ -47,9 +48,9 @@ pub fn fast_test_config() -> CleanroomConfig {
 pub fn comprehensive_test_config() -> CleanroomConfig {
     CleanroomConfig {
         enable_singleton_containers: true,
-        container_startup_timeout: Duration::from_secs(60),
-        test_execution_timeout: Duration::from_secs(300),
-        max_concurrent_containers: 10,
+        container_startup_timeout: Duration::from_millis(10),
+        test_execution_timeout: Duration::from_millis(50),
+        max_concurrent_containers: 5,
         enable_deterministic_execution: true,
         enable_coverage_tracking: true,
         enable_snapshot_testing: true,
@@ -115,7 +116,8 @@ where
         if condition().await {
             return Ok(true);
         }
-        tokio::time::sleep(Duration::from_millis(10)).await;
+        // Use conditional sleep for faster tests
+        conditional_sleep(Duration::from_micros(10)).await;
     }
     Ok(false)
 }

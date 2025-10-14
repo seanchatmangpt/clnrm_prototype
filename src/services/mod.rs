@@ -6,6 +6,7 @@
 #![allow(clippy::type_complexity)]
 
 use crate::error::{Result, CleanroomError};
+use crate::test_utils::mock_time::conditional_sleep;
 use std::collections::HashMap;
 
 pub mod postgres;
@@ -194,7 +195,7 @@ impl ServiceManager {
             if self.all_healthy()? {
                 return Ok(());
             }
-            std::thread::sleep(check_interval);
+            conditional_sleep(check_interval).await;
         }
 
         Err(crate::error::CleanroomError::service_error(format!(
@@ -220,7 +221,7 @@ impl ServiceManager {
             if all_ready {
                 return Ok(());
             }
-            std::thread::sleep(check_interval);
+            conditional_sleep(check_interval).await;
         }
 
         Err(crate::error::CleanroomError::service_error(format!(

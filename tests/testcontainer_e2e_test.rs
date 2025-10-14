@@ -42,7 +42,9 @@ async fn test_docker_integration_basic() {
 /// Test CleanroomEnvironment creation and basic functionality
 #[tokio::test]
 async fn test_cleanroom_environment_creation() {
-    let config = CleanroomConfig::default();
+    let mut config = CleanroomConfig::default();
+    config.container_startup_timeout = Duration::from_millis(10);
+    config.test_execution_timeout = Duration::from_millis(50);
     let environment = CleanroomEnvironment::new(config).await;
     assert!(environment.is_ok());
 
@@ -60,7 +62,9 @@ async fn test_container_creation_and_management() {
         return;
     }
 
-    let config = CleanroomConfig::default();
+    let mut config = CleanroomConfig::default();
+    config.container_startup_timeout = Duration::from_millis(10);
+    config.test_execution_timeout = Duration::from_millis(50);
     let environment = CleanroomEnvironment::new(config).await.unwrap();
     let environment_arc = Arc::new(environment);
     let _guard = CleanroomGuard::new(environment_arc.clone());
@@ -194,7 +198,7 @@ async fn test_error_handling() {
 #[tokio::test]
 async fn test_timeout_handling() {
     // Test command that takes too long
-    let result = timeout(Duration::from_secs(1), async { run(["sleep", "10"]) }).await;
+    let result = timeout(Duration::from_millis(10), async { run(["sleep", "1"]) }).await;
 
     assert!(result.is_err()); // Should timeout
 }
