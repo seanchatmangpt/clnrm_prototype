@@ -1,0 +1,26 @@
+# Code Owners for clnrm project
+# These owners will be automatically requested for review when PRs touch these files
+
+# Default owners for everything in the repo
+* @sac
+
+# CI/CD workflows - require approval for pipeline changes
+/.github/workflows/ @sac
+/.github/dependabot.yml @sac
+/.github/CODEOWNERS @sac
+
+# Core source code
+/src/ @sac
+
+# Tests and benchmarks
+/tests/ @sac
+/benches/ @sac
+
+# Documentation
+/docs/ @sac
+/*.md @sac
+
+# Build and configuration files
+/Cargo.toml @sac
+/Cargo.lock @sac
+/Makefile.toml @sac

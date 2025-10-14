@@ -731,7 +731,7 @@ mod tests {
             parent_id: None,
             name: "test".to_string(),
             start_time: SerializableInstant::now(),
-            end_time: Some(Instant::now()),
+            end_time: Some(SerializableInstant::now()),
             duration: Some(std::time::Duration::from_millis(100)),
             status: SpanStatus::Completed,
             attributes: HashMap::new(),

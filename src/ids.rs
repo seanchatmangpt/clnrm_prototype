@@ -653,16 +653,17 @@ mod tests {
     #[test]
     fn test_id_hash() {
         use std::collections::HashMap;
-        
-        let mut map = HashMap::new();
+
+        let mut container_map = HashMap::new();
+        let mut session_map = HashMap::new();
         let container_id = ContainerId::new();
         let session_id = SessionId::new();
-        
-        map.insert(container_id, "container");
-        map.insert(session_id, "session");
-        
-        assert_eq!(map.get(&container_id), Some(&"container"));
-        assert_eq!(map.get(&session_id), Some(&"session"));
+
+        container_map.insert(container_id, "container");
+        session_map.insert(session_id, "session");
+
+        assert_eq!(container_map.get(&container_id), Some(&"container"));
+        assert_eq!(session_map.get(&session_id), Some(&"session"));
     }
 
     #[test]

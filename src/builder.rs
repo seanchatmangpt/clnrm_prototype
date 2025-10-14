@@ -1,4 +1,89 @@
-//! Advanced builder pattern for complex configurations (not currently used).
+//! # Type-Safe Builder Pattern for CleanroomEnvironment
+//!
+//! This module provides a compile-time safe builder for constructing `CleanroomEnvironment`
+//! instances with complex configurations. It uses the **typestate pattern** to ensure
+//! configuration validity at compile time, preventing common configuration mistakes.
+//!
+//! ## Overview
+//!
+//! The `CleanroomBuilder` provides a fluent API for building cleanroom environments with
+//! multiple configuration options. The builder uses Rust's type system to enforce correct
+//! configuration order and prevent invalid states.
+//!
+//! ## Key Features
+//!
+//! - **🔒 Compile-Time Safety**: Invalid configurations are caught at compile time
+//! - **🎯 Fluent API**: Method chaining for readable configuration
+//! - **📋 Preset Configurations**: Common patterns like `secure()`, `performance()`, `development()`
+//! - **🧩 Flexible Composition**: Build configurations step by step
+//! - **✅ Type-State Pattern**: Different builder states prevent invalid operations
+//!
+//! ## Usage Examples
+//!
+//! ### Basic Usage
+//!
+//! ```no_run
+//! use clnrm::CleanroomBuilder;
+//! use std::time::Duration;
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Create environment with basic configuration
+//!     let environment = CleanroomBuilder::new()
+//!         .with_timeout(Duration::from_secs(60))
+//!         .build()
+//!         .await?;
+//!
+//!     // Use environment for testing
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### Security-Focused Configuration
+//!
+//! ```no_run
+//! use clnrm::{CleanroomBuilder, SecurityPolicy, SecurityLevel};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let policy = SecurityPolicy::with_security_level(SecurityLevel::Locked);
+//!
+//!     let environment = CleanroomBuilder::new()
+//!         .with_security_policy(policy)
+//!         .with_coverage_tracking(true)
+//!         .with_tracing(true)
+//!         .build()
+//!         .await?;
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### Using Preset Configurations
+//!
+//! ```no_run
+//! use clnrm::CleanroomBuilder;
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Use preset secure configuration
+//!     let secure_env = CleanroomBuilder::secure()
+//!         .build()
+//!         .await?;
+//!
+//!     // Use preset performance configuration
+//!     let perf_env = CleanroomBuilder::performance()
+//!         .build()
+//!         .await?;
+//!
+//!     // Use preset development configuration
+//!     let dev_env = CleanroomBuilder::development()
+//!         .build()
+//!         .await?;
+//!
+//!     Ok(())
+//! }
+//! ```
 
 use crate::error::Result;
 use crate::config::CleanroomConfig;
@@ -6,13 +91,44 @@ use crate::policy::SecurityPolicy;
 use crate::limits::ResourceLimits;
 use crate::cleanroom::CleanroomEnvironment;
 use std::time::Duration;
-// use std::collections::HashMap; // Unused for now
 
-/// Type-safe builder for CleanroomEnvironment
+/// Type-safe builder for CleanroomEnvironment using the typestate pattern
 ///
-/// Uses typestate pattern to ensure compile-time validation of configuration.
-/// Each method call transitions to a new state type, preventing invalid
-/// configurations from being constructed.
+/// The `CleanroomBuilder` uses Rust's type system to enforce correct configuration
+/// at compile time. Different states represent different stages of configuration,
+/// and only valid transitions are allowed.
+///
+/// # Type States
+///
+/// - `Initial`: Starting state, can configure any option
+/// - `WithTimeout`: Timeout configured, can add security or build
+/// - `WithSecurity`: Security policy configured, can add resources or build
+/// - `WithResources`: Resource limits configured, can add determinism or build
+/// - `WithDeterministic`: Deterministic execution configured, ready to build
+/// - `Ready`: Fully configured, ready to build
+///
+/// # Thread Safety
+///
+/// The builder is not thread-safe and should be used from a single thread. However,
+/// the resulting `CleanroomEnvironment` is thread-safe and can be shared using `Arc`.
+///
+/// # Examples
+///
+/// ```no_run
+/// use clnrm::CleanroomBuilder;
+/// use std::time::Duration;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     // Type-safe configuration
+///     let environment = CleanroomBuilder::new()
+///         .with_timeout(Duration::from_secs(60))
+///         .build()
+///         .await?;
+///
+///     Ok(())
+/// }
+/// ```
 pub struct CleanroomBuilder<State = Initial> {
     config: CleanroomConfig,
     _state: std::marker::PhantomData<State>,
@@ -308,7 +424,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_builder_with_security() {
-        let policy = SecurityPolicy::locked();
+        let policy = SecurityPolicy::with_security_level(crate::policy::SecurityLevel::Locked);
         let env = CleanroomBuilder::new()
             .with_security_policy(policy.clone())
             .build()

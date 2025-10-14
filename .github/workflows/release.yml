@@ -1,0 +1,277 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.2.0)'
+        required: true
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Pre-release validation
+  validate:
+    name: Pre-Release Validation
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: release-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Verify version in Cargo.toml
+        run: |
+          CARGO_VERSION=$(grep '^version =' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          RELEASE_VERSION="${{ steps.get_version.outputs.version }}"
+          echo "Cargo.toml version: $CARGO_VERSION"
+          echo "Release version: $RELEASE_VERSION"
+          if [[ "$CARGO_VERSION" != "$RELEASE_VERSION" ]]; then
+            echo "❌ Version mismatch: Cargo.toml ($CARGO_VERSION) != Release ($RELEASE_VERSION)"
+            exit 1
+          fi
+
+      - name: Run full test suite
+        run: cargo test --all-features --all-targets
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Verify documentation
+        run: cargo doc --no-deps --all-features
+
+  # Build release artifacts for multiple platforms
+  build-artifacts:
+    name: Build Release (${{ matrix.target }})
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact_name: clnrm-linux-x86_64
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            artifact_name: clnrm-macos-x86_64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            artifact_name: clnrm-macos-aarch64
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            artifact_name: clnrm-windows-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ matrix.os }}-${{ matrix.target }}-release-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }} --bin cleanroom
+
+      - name: Package binary (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd target/${{ matrix.target }}/release
+          tar czf ../../../${{ matrix.artifact_name }}.tar.gz cleanroom
+          cd ../../../
+          shasum -a 256 ${{ matrix.artifact_name }}.tar.gz > ${{ matrix.artifact_name }}.tar.gz.sha256
+
+      - name: Package binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd target/${{ matrix.target }}/release
+          7z a ../../../${{ matrix.artifact_name }}.zip cleanroom.exe
+          cd ../../../
+          certutil -hashfile ${{ matrix.artifact_name }}.zip SHA256 > ${{ matrix.artifact_name }}.zip.sha256
+
+      - name: Upload artifact (Unix)
+        if: runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            ${{ matrix.artifact_name }}.tar.gz
+            ${{ matrix.artifact_name }}.tar.gz.sha256
+
+      - name: Upload artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            ${{ matrix.artifact_name }}.zip
+            ${{ matrix.artifact_name }}.zip.sha256
+
+  # Generate changelog
+  changelog:
+    name: Generate Changelog
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [[ -z "$PREV_TAG" ]]; then
+            echo "First release - generating full changelog"
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            echo "Generating changelog from $PREV_TAG to HEAD"
+            COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          # Create structured changelog
+          CHANGELOG="## What's Changed
+
+          ### Features
+          $(echo "$COMMITS" | grep -i "feat\|add\|new" || echo "- No new features")
+
+          ### Bug Fixes
+          $(echo "$COMMITS" | grep -i "fix\|bug" || echo "- No bug fixes")
+
+          ### Performance
+          $(echo "$COMMITS" | grep -i "perf\|optim" || echo "- No performance improvements")
+
+          ### Documentation
+          $(echo "$COMMITS" | grep -i "doc\|readme" || echo "- No documentation changes")
+
+          ### Other Changes
+          $(echo "$COMMITS" | grep -vi "feat\|add\|new\|fix\|bug\|perf\|optim\|doc\|readme" || echo "- No other changes")
+
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${{ needs.validate.outputs.version }}"
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  # Publish to crates.io
+  publish-crate:
+    name: Publish to crates.io
+    needs: [validate, build-artifacts]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: publish-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Publish to crates.io
+        run: cargo publish --token ${{ secrets.CARGO_TOKEN }}
+        continue-on-error: true
+
+  # Create GitHub release
+  create-release:
+    name: Create GitHub Release
+    needs: [validate, build-artifacts, changelog, publish-crate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.validate.outputs.version }}
+          name: Release v${{ needs.validate.outputs.version }}
+          body: ${{ needs.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/**/*.tar.gz
+            artifacts/**/*.tar.gz.sha256
+            artifacts/**/*.zip
+            artifacts/**/*.zip.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Post-release notification
+  notify:
+    name: Post-Release Notification
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release notification
+        run: |
+          echo "🎉 Release v${{ needs.validate.outputs.version }} published successfully!"
+          echo "📦 Available on crates.io: https://crates.io/crates/clnrm"
+          echo "🚀 GitHub Release: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.validate.outputs.version }}"

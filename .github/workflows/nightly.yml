@@ -1,0 +1,122 @@
+name: Nightly Build
+
+on:
+  schedule:
+    # Run every night at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: full
+
+jobs:
+  # Comprehensive nightly testing
+  nightly-test:
+    name: Nightly Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt, clippy, miri
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: nightly-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run tests with all features
+        run: cargo +nightly test --all-features --all-targets
+
+      - name: Run Miri (unsafe code checker)
+        run: |
+          cargo +nightly miri setup
+          cargo +nightly miri test --lib
+        continue-on-error: true
+
+      - name: Check for future incompatibilities
+        run: cargo +nightly check --all-features
+        continue-on-error: true
+
+  # Full benchmark suite
+  nightly-benchmark:
+    name: Full Benchmark Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: bench-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup Docker
+        run: docker --version
+
+      - name: Run full benchmark suite
+        run: cargo bench --all-features
+
+      - name: Archive benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: target/criterion/
+
+  # Extended fuzz testing
+  nightly-fuzz:
+    name: Fuzz Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz
+
+      - name: Run property tests
+        run: cargo test --test proptest -- --test-threads=1
+        env:
+          PROPTEST_CASES: 10000
+
+  # Notify on failure
+  notify-failure:
+    name: Notify on Failure
+    if: failure()
+    needs: [nightly-test, nightly-benchmark, nightly-fuzz]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue on failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Nightly build failed on ${new Date().toISOString().split('T')[0]}`,
+              body: `Nightly build failed. Check workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              labels: ['ci/cd', 'nightly', 'automated']
+            });
+            console.log(`Created issue #${issue.data.number}`);

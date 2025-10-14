@@ -1,0 +1,316 @@
+name: CI
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master]
+  schedule:
+    # Run security audit weekly on Mondays at 00:00 UTC
+    - cron: '0 0 * * 1'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  # Fail fast on warnings
+  RUSTFLAGS: -D warnings
+
+jobs:
+  # Fast checks that run first
+  check:
+    name: Quick Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Check documentation
+        run: cargo doc --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  # Build matrix for multiple platforms
+  build:
+    name: Build (${{ matrix.os }})
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable, nightly]
+        exclude:
+          # Only run nightly on Ubuntu to save resources
+          - os: macos-latest
+            rust: nightly
+          - os: windows-latest
+            rust: nightly
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build workspace
+        run: cargo build --all-targets --all-features
+
+      - name: Build binaries
+        run: |
+          cargo build --bin bench
+          cargo build --bin cleanroom
+          cargo build --bin micro_cli
+
+  # Comprehensive test suite
+  test:
+    name: Test Suite (${{ matrix.os }})
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup Docker (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          # Docker is pre-installed on GitHub runners
+          docker --version
+
+      - name: Setup Docker (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          # Docker Desktop is pre-installed on GitHub runners
+          docker --version
+
+      - name: Setup Docker (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # Docker Desktop is pre-installed on GitHub runners
+          docker --version
+
+      - name: Run unit tests
+        run: cargo test --lib --all-features
+
+      - name: Run integration tests
+        run: cargo test --test '*' --all-features
+
+      - name: Run doc tests
+        run: cargo test --doc --all-features
+
+      - name: Run example tests
+        run: cargo test --examples --all-features
+
+  # Code coverage (Linux only for efficiency)
+  coverage:
+    name: Code Coverage
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-coverage-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Setup Docker
+        run: docker --version
+
+      - name: Generate coverage
+        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: lcov.info
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Check coverage threshold
+        run: |
+          coverage=$(cargo llvm-cov --all-features --workspace --summary-only | grep -oP 'TOTAL.*\K\d+\.\d+' | head -1)
+          echo "Coverage: ${coverage}%"
+          threshold=80.0
+          if (( $(echo "$coverage < $threshold" | bc -l) )); then
+            echo "❌ Coverage ${coverage}% is below threshold ${threshold}%"
+            exit 1
+          else
+            echo "✅ Coverage ${coverage}% meets threshold ${threshold}%"
+          fi
+
+  # Security audit
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-cargo-audit-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Run security audit
+        run: cargo audit --deny warnings
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked
+
+      - name: Run cargo-deny
+        run: cargo deny check
+
+  # Benchmark regression detection
+  benchmark:
+    name: Benchmark Tests
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup Docker
+        run: docker --version
+
+      - name: Build benchmarks
+        run: cargo bench --no-run --all-features
+
+      - name: Run benchmarks (quick mode)
+        run: cargo bench --all-features -- --quick
+        continue-on-error: true
+
+  # Dependency review for pull requests
+  dependency-review:
+    name: Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+
+  # Final status check
+  ci-success:
+    name: CI Success
+    if: always()
+    needs:
+      - check
+      - build
+      - test
+      - coverage
+      - security
+      - benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs
+        run: |
+          if [[ "${{ needs.check.result }}" != "success" ]] || \
+             [[ "${{ needs.build.result }}" != "success" ]] || \
+             [[ "${{ needs.test.result }}" != "success" ]] || \
+             [[ "${{ needs.coverage.result }}" != "success" ]] || \
+             [[ "${{ needs.security.result }}" != "success" ]]; then
+            echo "❌ One or more CI jobs failed"
+            exit 1
+          fi
+          echo "✅ All CI jobs passed successfully"

@@ -54,6 +54,10 @@ path = "src/bin/cleanroom.rs"
 name = "micro_cli"
 path = "src/bin/micro_cli.rs"
 
+[[bench]]
+name = "production_benchmarks"
+harness = false
+
 [dev-dependencies]
 criterion = "0.7"
 proptest = "1.8"
