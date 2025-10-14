@@ -1,6 +1,64 @@
-//! Security and resource policies for cleanroom testing.
+//! Policy enforcement for cleanroom testing
 //!
-//! Configure isolation, resource limits, and execution rules for hermetic testing.
+//! This module provides comprehensive policy enforcement following core team best practices:
+//! - Security boundaries and isolation controls
+//! - Resource limits and constraints enforcement
+//! - Execution policies and compliance rules
+//! - Audit trails and compliance reporting
+//!
+//! ## Security Levels
+//!
+//! Cleanroom supports multiple security levels:
+//!
+//! - **Low**: Minimal isolation for development and debugging
+//! - **Medium**: Balanced security for most testing scenarios
+//! - **High**: Enhanced security for sensitive applications
+//! - **Maximum**: Maximum security with strict isolation
+//! - **Locked**: Maximum security with additional restrictions
+//!
+//! ## Usage Examples
+//!
+//! ### Basic Policy Creation
+//!
+//! ```no_run
+//! use clnrm::{Policy, SecurityLevel};
+//!
+//! // Create policy with specific security level
+//! let policy = Policy::with_security_level(SecurityLevel::High);
+//!
+//! // Create custom policy with resource limits
+//! let policy = Policy::with_resource_limits(
+//!     80.0,  // max CPU %
+//!     1024 * 1024 * 1024,  // max memory bytes (1GB)
+//!     10 * 1024 * 1024 * 1024,  // max disk bytes (10GB)
+//! );
+//! ```
+//!
+//! ### Security Policy Configuration
+//!
+//! ```no_run
+//! use clnrm::{Policy, SecurityPolicy};
+//!
+//! let mut policy = Policy::default();
+//! policy.security.enable_network_isolation = true;
+//! policy.security.enable_filesystem_isolation = true;
+//! policy.security.allowed_ports = vec![5432, 6379]; // PostgreSQL, Redis
+//! policy.security.blocked_addresses = vec!["127.0.0.1".to_string()];
+//! ```
+//!
+//! ### Policy Validation
+//!
+//! ```no_run
+//! use clnrm::Policy;
+//!
+//! let policy = Policy::locked();
+//!
+//! // Validate policy configuration
+//! if let Err(e) = policy.validate() {
+//!     eprintln!("Policy validation failed: {}", e);
+//!     // Handle validation errors
+//! }
+//! ```
 
 use crate::error::{CleanroomError, Result};
 use serde::{Deserialize, Serialize};

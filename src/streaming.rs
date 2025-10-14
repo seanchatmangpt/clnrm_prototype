@@ -1,7 +1,40 @@
-//! Advanced streaming APIs for high-performance artifact collection.
+//! Zero-copy streaming for artifacts
 //!
-//! **Note**: This is an advanced feature. Most users should use the standard
-//! `CleanroomEnvironment` API instead.
+//! This module provides streaming APIs for artifacts without modifying existing types,
+//! using zero-copy techniques to minimize memory allocations and improve performance.
+//!
+//! ## Performance Benefits
+//!
+//! - **Zero-copy operations**: Avoid unnecessary data copying
+//! - **Memory efficiency**: Reduced memory allocations for large artifacts
+//! - **Streaming processing**: Process artifacts as they arrive
+//! - **Backpressure handling**: Proper flow control for high-throughput scenarios
+//!
+//! ## Usage Example
+//!
+//! ```rust
+//! use crate::cleanroom::streaming::{ArtifactStream, StreamingCollector};
+//! use clnrm::CleanroomEnvironment;
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let environment = CleanroomEnvironment::new(Default::default()).await?;
+//!     let stream = ArtifactStream::new(environment);
+//!     let collector = StreamingCollector::with_zero_copy();
+//!
+//!     // Process artifacts as they stream in
+//!     stream.collect_into(collector).await?;
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ## When to Use
+//!
+//! Use streaming APIs when:
+//! - Processing large volumes of artifacts
+//! - Memory-constrained environments
+//! - Real-time artifact processing requirements
+//! - High-performance testing scenarios
 
 use crate::error::Result;
 use crate::cleanroom::CleanroomEnvironment;

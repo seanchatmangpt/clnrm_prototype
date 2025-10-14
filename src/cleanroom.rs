@@ -1,15 +1,31 @@
 //! # Core Cleanroom Environment
 //!
-//! This module provides the main `CleanroomEnvironment` for hermetic testing.
+//! This module provides the main `CleanroomEnvironment` implementation, which serves as the
+//! central orchestrator for hermetic testing environments. It manages container lifecycle,
+//! metrics collection, resource monitoring, and concurrent task execution.
 //!
 //! ## Overview
 //!
-//! The `CleanroomEnvironment` provides:
+//! The `CleanroomEnvironment` is the central component that provides:
 //!
-//! - **🔒 Hermetic Isolation**: Complete isolation from the host system
-//! - **📊 Metrics Collection**: Track test execution and performance
-//! - **🛡️ Security Policies**: Configurable isolation and resource limits
-//! - **🧹 Automatic Cleanup**: RAII-based resource cleanup
+//! - **🔒 Hermetic Isolation**: Complete isolation from the host system with filesystem,
+//!   network, and process isolation controls
+//! - **📊 Comprehensive Metrics**: Detailed performance and resource metrics with
+//!   real-time monitoring and historical tracking
+//! - **🛡️ Security Policies**: Configurable isolation levels, resource limits, and
+//!   compliance controls with multiple security levels
+//! - **🧹 Automatic Cleanup**: RAII-based resource cleanup with proper error handling
+//!   and resource leak prevention
+//! - **⚡ Concurrent Execution**: Structured concurrency with task orchestration and
+//!   cancellation support
+//! - **🏥 Health Monitoring**: System health monitoring and status reporting with
+//!   detailed diagnostics
+//!
+//! ## Thread Safety
+//!
+//! The `CleanroomEnvironment` is designed to be thread-safe and can be shared across
+//! multiple threads using `Arc<CleanroomEnvironment>`. All operations are async and
+//! properly synchronized.
 //!
 //! ## Usage Examples
 //!
@@ -17,18 +33,30 @@
 //!
 //! ```no_run
 //! use crate::cleanroom::{CleanroomEnvironment, CleanroomConfig};
+//! use std::sync::Arc;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Create environment with default configuration
 //!     let config = CleanroomConfig::default();
-//!     let environment = CleanroomEnvironment::new(config).await?;
-//!     
-//!     // Use environment for testing
-//!     let result = environment.execute_test("my_test", || {
-//!         Ok::<i32, clnrm::Error>(42)
+//!     let environment = Arc::new(CleanroomEnvironment::new(config).await?);
+//!
+//!     // Execute test with proper error handling
+//!     let result = environment.execute_test("integration_test", || {
+//!         // Your test logic runs in isolated environment
+//!         println!("Running test in cleanroom environment");
+//!         Ok::<String, clnrm::Error>("test completed successfully".to_string())
 //!     }).await?;
-//!     
-//!     // Clean up resources
+//!
+//!     println!("Test result: {}", result);
+//!
+//!     // Get comprehensive metrics
+//!     let metrics = environment.get_metrics().await;
+//!     println!("Tests executed: {}", metrics.tests_executed);
+//!     println!("Tests passed: {}", metrics.tests_passed);
+//!     println!("Total duration: {}ms", metrics.total_duration_ms);
+//!
+//!     // Clean up resources properly
 //!     environment.cleanup().await?;
 //!     Ok(())
 //! }

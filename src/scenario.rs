@@ -1,7 +1,62 @@
 //! Scenario DSL for multi-step test orchestration
 //!
 //! Provides a fluent API for defining complex test scenarios with
-//! deterministic execution, step aggregation, and concurrent execution.
+//! deterministic execution, step aggregation, concurrent execution, and
+//! comprehensive error handling.
+//!
+//! ## Features
+//!
+//! - **Multi-step workflows**: Define complex testing scenarios with multiple steps
+//! - **Error handling**: Automatic rollback and cleanup on step failures
+//! - **Concurrent execution**: Run steps in parallel for improved performance
+//! - **Deterministic execution**: Reproducible results with seeded randomness
+//! - **Comprehensive reporting**: Detailed step-by-step execution results
+//!
+//! ## Usage Examples
+//!
+//! ### Basic Scenario
+//!
+//! ```no_run
+//! use clnrm::{scenario, Policy};
+//!
+//! let scenario = scenario("integration_test")
+//!     .step("setup", ["echo", "setting up test environment"])
+//!     .step("execute", ["echo", "running main test logic"])
+//!     .step("verify", ["echo", "verifying test results"]);
+//!
+//! let result = scenario.run()?;
+//! println!("Scenario completed in {}ms", result.duration_ms);
+//! ```
+//!
+//! ### Scenario with Policy
+//!
+//! ```no_run
+//! use clnrm::{scenario, Policy, SecurityLevel};
+//!
+//! let policy = Policy::with_security_level(SecurityLevel::High);
+//! let scenario = scenario("secure_test")
+//!     .with_policy(policy)
+//!     .step("secure_setup", ["echo", "secure environment setup"])
+//!     .step("execute", ["echo", "running secure test"]);
+//!
+//! let result = scenario.run()?;
+//! assert!(result.success());
+//! ```
+//!
+//! ### Concurrent Scenario
+//!
+//! ```no_run
+//! use clnrm::scenario;
+//!
+//! let scenario = scenario("concurrent_test")
+//!     .concurrent()  // Enable concurrent execution
+//!     .step("task1", ["echo", "running task 1"])
+//!     .step("task2", ["echo", "running task 2"])
+//!     .step("task3", ["echo", "running task 3"]);
+//!
+//! let result = scenario.run()?;
+//! println!("Concurrent execution completed in {}ms", result.duration_ms);
+//! ```
 
 #![allow(clippy::get_first)]
 

@@ -9,16 +9,36 @@
 //! ## Overview
 //!
 //! Cleanroom provides a unified API for running commands and tests in completely isolated
-//! environments with deterministic results and comprehensive security policies.
+//! environments with deterministic results, comprehensive security policies, and support
+//! for multiple container backends (Docker, Podman, Kubernetes).
+//!
+//! The framework ensures **hermetic execution** - tests run in complete isolation from
+//! the host system, with deterministic results and comprehensive security controls.
 
 #![allow(clippy::get_first)]
 //!
 //! ## Key Features
 //!
-//! - **🔒 Hermetic Execution**: Complete isolation from the host system
-//! - **🛡️ Security Policies**: Configurable isolation and resource limits
-//! - **📊 Performance Monitoring**: Built-in metrics collection
-//! - **🔧 Simple API**: Easy-to-use functions for common testing scenarios
+//! - **🔒 Hermetic Execution**: Complete isolation from the host system with filesystem,
+//!   network, and process isolation controls
+//! - **🛡️ Security Policies**: Configurable isolation levels, resource limits, and
+//!   compliance controls with multiple security levels (Low, Medium, High, Maximum)
+//! - **📊 Performance Monitoring**: Built-in metrics collection, resource tracking,
+//!   and execution analytics with detailed performance insights
+//! - **🔧 Simple API**: Easy-to-use functions for common testing scenarios with
+//!   sensible defaults and comprehensive error handling
+//! - **🎯 Deterministic Results**: Reproducible outputs with seeded randomness,
+//!   controlled environments, and snapshot testing capabilities
+//! - **📋 Scenario DSL**: Multi-step workflows with assertions, rollback, and
+//!   concurrent execution for complex testing scenarios
+//! - **🔍 Coverage Tracking**: Test coverage analysis and reporting for comprehensive
+//!   test quality assessment
+//! - **📸 Snapshot Testing**: Capture and compare test outputs for regression detection
+//!   and deterministic validation
+//! - **🔐 Attestation**: Cryptographic verification of test environments and execution
+//!   provenance for compliance and audit trails
+//! - **📈 Observability**: Comprehensive tracing, logging, and debugging capabilities
+//!   with structured concurrency and performance profiling
 //!
 //!
 //! ## Quick Start
@@ -41,20 +61,77 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     // Create secure configuration
+//!     // Create secure configuration with custom policies
 //!     let config = CleanroomConfig::default();
 //!     let environment = CleanroomEnvironment::new(config).await?;
 //!
-//!     // Execute test
-//!     let result = environment.execute_test("my_test", || {
-//!         Ok::<i32, clnrm::Error>(42)
+//!     // Execute test with proper error handling
+//!     let result = environment.execute_test("integration_test", || {
+//!         // Your test logic here - runs in isolated environment
+//!         Ok::<String, clnrm::Error>("test completed successfully".to_string())
 //!     }).await?;
 //!
-//!     // Get metrics
+//!     println!("Test result: {}", result);
+//!
+//!     // Get comprehensive metrics
 //!     let metrics = environment.get_metrics().await;
 //!     println!("Tests executed: {}", metrics.tests_executed);
+//!     println!("Tests passed: {}", metrics.tests_passed);
+//!     println!("Total duration: {}ms", metrics.total_duration_ms);
 //!
-//!     // Clean up
+//!     // Clean up resources properly
+//!     environment.cleanup().await?;
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### Security Policies
+//!
+//! ```no_run
+//! use clnrm::{run_with_policy, Policy, SecurityLevel};
+//!
+//! // Create restrictive security policy for production testing
+//! let policy = Policy::locked();
+//!
+//! // Execute with policy - automatically enforced
+//! let result = run_with_policy(["echo", "secure execution"], &policy)?;
+//! assert!(result.success());
+//!
+//! // Policy is validated at runtime
+//! if let Err(e) = policy.validate() {
+//!     eprintln!("Policy validation failed: {}", e);
+//! }
+//! ```
+//!
+//! ### Scenario Execution
+//!
+//! ```no_run
+//! use clnrm::{scenario, CleanroomEnvironment, CleanroomConfig};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let config = CleanroomConfig::default();
+//!     let environment = CleanroomEnvironment::new(config).await?;
+//!
+//!     // Create multi-step scenario
+//!     let scenario = scenario("integration_test")
+//!         .step("setup", ["echo", "setting up test environment"])
+//!         .step("execute", ["echo", "running main test logic"])
+//!         .step("verify", ["echo", "verifying test results"])
+//!         .step("cleanup", ["echo", "cleaning up test artifacts"]);
+//!
+//!     // Execute scenario with automatic rollback on failure
+//!     let result = scenario.run()?;
+//!
+//!     // Check individual step results
+//!     for step in result.steps {
+//!         println!("Step {}: {} ({}ms)",
+//!             step.name,
+//!             if step.success { "PASSED" } else { "FAILED" },
+//!             step.duration_ms
+//!         );
+//!     }
+//!
 //!     environment.cleanup().await?;
 //!     Ok(())
 //! }

@@ -1,4 +1,56 @@
-//! Advanced lifecycle management for complex deployment scenarios.
+//! # Lifecycle Management System
+//!
+//! Complete ggen-style lifecycle management for cleanroom environments.
+//! Provides init, test, deploy, validate, and readiness tracking phases.
+//!
+//! ## Features
+//!
+//! - **Project Initialization**: Bootstrap project structure and dependencies
+//! - **Test Execution**: Run tests in cleanroom environments
+//! - **Deployment**: Deploy to dev/staging/production environments
+//! - **Validation**: Validate environment configuration and requirements
+//! - **Readiness Tracking**: Track production readiness with detailed scoring
+//!
+//! ## Usage Example
+//!
+//! ```no_run
+//! use clnrm::lifecycle::{LifecycleManager, LifecycleConfig};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Initialize lifecycle configuration
+//!     let config = LifecycleConfig {
+//!         project_name: "my-project".to_string(),
+//!         phases: vec![
+//!             PhaseConfig {
+//!                 name: "init".to_string(),
+//!                 command: "echo".to_string(),
+//!                 args: vec!["initializing project".to_string()],
+//!                 ..Default::default()
+//!             },
+//!             PhaseConfig {
+//!                 name: "test".to_string(),
+//!                 command: "cargo".to_string(),
+//!                 args: vec!["test".to_string()],
+//!                 ..Default::default()
+//!             },
+//!         ],
+//!         ..Default::default()
+//!     };
+//!
+//!     // Create lifecycle manager
+//!     let manager = LifecycleManager::new(config, None)?;
+//!
+//!     // Execute lifecycle phases
+//!     let results = manager.execute_all_phases().await?;
+//!
+//!     for result in results {
+//!         println!("Phase {}: {}", result.phase_name, result.status);
+//!     }
+//!
+//!     Ok(())
+//! }
+//! ```
 //!
 //! ## Example
 //!

@@ -1,4 +1,47 @@
-//! Test coverage collection (advanced feature).
+//! Test coverage collection for cleanroom testing
+//!
+//! This module provides comprehensive test coverage analysis including:
+//! - Line coverage tracking and reporting
+//! - Branch coverage analysis
+//! - Function coverage metrics
+//! - Integration with popular coverage tools
+//!
+//! ## Features
+//!
+//! - **Line Coverage**: Track which lines of code are executed during tests
+//! - **Branch Coverage**: Monitor conditional branches and decision points
+//! - **Function Coverage**: Track function call coverage and execution paths
+//! - **Report Generation**: Generate detailed coverage reports in multiple formats
+//! - **Integration**: Works with popular coverage tools (lcov, cobertura, etc.)
+//!
+//! ## Usage Example
+//!
+//! ```rust
+//! use clnrm::{CoverageCollector, CleanroomEnvironment};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let environment = CleanroomEnvironment::new(Default::default()).await?;
+//!     let collector = CoverageCollector::new(environment.session_id());
+//!
+//!     // Execute tests with coverage tracking
+//!     collector.start_collection().await?;
+//!
+//!     // Run your tests here
+//!     environment.execute_test("test", || {
+//!         // Test code that should be covered
+//!         Ok::<(), clnrm::Error>(())
+//!     }).await?;
+//!
+//!     collector.stop_collection().await?;
+//!
+//!     // Generate coverage report
+//!     let report = collector.get_report().await?;
+//!     println!("Coverage: {:.2}%", report.overall_percentage);
+//!
+//!     Ok(())
+//! }
+//! ```
 
 use crate::error::Result;
 use crate::report::CoverageData;
