@@ -8,6 +8,8 @@
 //! Cleanroom provides a unified API for running commands and tests in completely isolated
 //! environments with deterministic results, comprehensive security policies, and support
 //! for multiple container backends (Docker, Podman, Kubernetes).
+
+#![allow(clippy::get_first)]
 //!
 //! ## Key Features
 //!
@@ -432,8 +434,8 @@ where
         return Err(Error::validation_error("no command provided"));
     }
 
-    let cmd =
-        Cmd::new(&args_vec[0]).args(args_vec.get(1..).unwrap_or(&[]).iter().map(|s| s.as_str()).collect::<Vec<_>>());
+    let args: Vec<&str> = args_vec.get(1..).unwrap_or(&[]).iter().map(|s| s.as_str()).collect();
+    let cmd = Cmd::new(args_vec.first().ok_or_else(|| Error::validation_error("Empty command"))?).args(&args);
     let backend_result = backend.run_cmd(cmd)?;
 
     Ok(RunResult {
@@ -582,8 +584,9 @@ where
         return Err(Error::validation_error("no command provided"));
     }
 
-    let cmd = Cmd::new(&args_vec[0])
-        .args(args_vec.get(1..).unwrap_or(&[]).iter().map(|s| s.as_str()).collect::<Vec<_>>())
+    let args: Vec<&str> = args_vec.get(1..).unwrap_or(&[]).iter().map(|s| s.as_str()).collect();
+    let cmd = Cmd::new(args_vec.first().ok_or_else(|| Error::validation_error("Empty command"))?)
+        .args(&args)
         .env("CLEANROOM_POLICY", serde_json::to_string(policy)?);
 
     let backend_result = backend.run_cmd(cmd)?;

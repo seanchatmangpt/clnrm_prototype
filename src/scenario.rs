@@ -3,6 +3,8 @@
 //! Provides a fluent API for defining complex test scenarios with
 //! deterministic execution, step aggregation, and concurrent execution.
 
+#![allow(clippy::get_first)]
+
 use crate::backend::{Backend, Cmd};
 use crate::error::Result;
 use crate::policy::Policy;
@@ -147,8 +149,8 @@ impl Scenario {
             return self;
         }
 
-        let cmd = Cmd::new(&args_vec[0])
-            .args(args_vec.get(1..).unwrap_or(&[]).iter().map(|s| s.as_str()).collect::<Vec<_>>());
+        let cmd = Cmd::new(args_vec.first().map_or("", |v| v))
+            .args(&args_vec.get(1..).unwrap_or(&[]).iter().map(|s| s.as_str()).collect::<Vec<_>>());
         self.steps.push(Step {
             name: label,
             cmd,

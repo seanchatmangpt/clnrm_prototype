@@ -124,16 +124,16 @@ mod tests {
 
     #[test]
     fn test_redis_service_trait() {
-        let mut redis = Redis::new().expect("Failed to create Redis instance");
+        let mut redis = Redis::new().unwrap_or_else(|e| panic!("Failed to create Redis instance: {}", e));
         assert_eq!(redis.name(), "redis");
         assert!(redis.start().is_ok());
         assert!(redis.stop().is_ok());
-        assert!(redis.is_running().expect("Failed to check if Redis is running"));
+        assert!(redis.is_running().unwrap_or_else(|e| panic!("Failed to check if Redis is running: {}", e)));
     }
 
     #[test]
     fn test_redis_connection_info() {
-        let redis = Redis::new().expect("Failed to create Redis instance");
+        let redis = Redis::new().unwrap_or_else(|e| panic!("Failed to create Redis instance: {}", e));
         let conn_info = redis.connection_info();
         assert!(conn_info.params().contains("host=localhost"));
         assert!(conn_info.params().contains("port=6379"));

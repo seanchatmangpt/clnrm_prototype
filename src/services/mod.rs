@@ -3,7 +3,9 @@
 //! Provides containerized service instances for testing including
 //! databases, caches, and other dependencies.
 
-use crate::error::Result;
+#![allow(clippy::type_complexity)]
+
+use crate::error::{Result, CleanroomError};
 use std::collections::HashMap;
 
 pub mod postgres;
@@ -119,7 +121,11 @@ impl ServiceManager {
     /// Start all services in order
     pub fn start_all(&mut self) -> Result<()> {
         for &index in &self.startup_order {
-            self.services[index].start()?;
+            if let Some(service) = self.services.get_mut(index) {
+                service.start()?;
+            } else {
+                return Err(CleanroomError::validation_error("Service index out of bounds"));
+            }
         }
         Ok(())
     }
@@ -127,7 +133,11 @@ impl ServiceManager {
     /// Stop all services in reverse order
     pub fn stop_all(&mut self) -> Result<()> {
         for &index in &self.shutdown_order {
-            self.services[index].stop()?;
+            if let Some(service) = self.services.get_mut(index) {
+                service.stop()?;
+            } else {
+                return Err(CleanroomError::validation_error("Service index out of bounds"));
+            }
         }
         Ok(())
     }
@@ -326,10 +336,13 @@ impl ServiceBuilder {
     }
 }
 
+/// Type alias for service factory functions
+type ServiceFactory = fn() -> Result<Box<dyn Service>>;
+
 /// Service registry for managing service types
 pub struct ServiceRegistry {
     /// Registered service types
-    service_types: HashMap<String, fn() -> Result<Box<dyn Service>>>,
+    service_types: HashMap<String, ServiceFactory>,
 }
 
 impl ServiceRegistry {

@@ -611,6 +611,9 @@ impl Default for ConcurrencyOrchestrator {
 mod tests {
     use super::*;
     use std::time::Duration;
+    
+    // Allow unwrap/expect in tests as they are expected to panic on failure
+    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic)]
 
     #[tokio::test]
     async fn test_orchestrator_creation() {

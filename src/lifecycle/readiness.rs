@@ -127,7 +127,7 @@ impl ReadinessTracker {
 
             category_scores
                 .entry(format!("{:?}", req.category))
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(score_contribution);
 
             requirements.push(req_status);
@@ -271,6 +271,9 @@ impl ReadinessTracker {
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    // Allow unwrap/expect in tests as they are expected to panic on failure
+    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic, clippy::unwrap_or_default)]
 
     #[tokio::test]
     async fn test_readiness_tracker_creation() {

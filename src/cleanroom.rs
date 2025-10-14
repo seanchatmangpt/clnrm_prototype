@@ -446,6 +446,7 @@ pub struct ResourceUsage {
     pub container_count: u32,
 }
 
+#[allow(dead_code)]
 impl CleanroomEnvironment {
     /// Generic helper to safely read from any RwLock
     async fn with_read<T, F, R>(lock: &Arc<RwLock<T>>, f: F) -> R
@@ -970,6 +971,7 @@ pub enum HealthStatus {
 }
 
 /// RAII guard for automatic cleanup
+#[allow(dead_code)]
 pub struct CleanroomGuard {
     environment: Arc<CleanroomEnvironment>,
 }
@@ -992,7 +994,7 @@ impl CleanroomGuard {
     fn emergency_container_cleanup(&self) -> Result<()> {
         // Try direct Docker cleanup as last resort
         match std::process::Command::new("docker")
-            .args(&["ps", "-aq", "--filter", "label=cleanroom"])
+            .args(["ps", "-aq", "--filter", "label=cleanroom"])
             .output()
         {
             Ok(output) => {

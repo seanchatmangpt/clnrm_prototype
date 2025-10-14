@@ -127,6 +127,9 @@ impl Default for CoverageCollector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    // Allow unused variables in tests
+    #[allow(clippy::unwrap_used, clippy::expect_used, unused_variables)]
 
     #[test]
     fn test_coverage_collector_creation() {
@@ -175,10 +178,9 @@ mod tests {
 
     #[test]
     fn test_coverage_data_new() {
-        let session_id = Uuid::new_v4();
         let data = CoverageData::new();
 
-        assert_eq!(data.session_id, session_id);
+        assert!(!data.session_id.is_nil());
         assert_eq!(data.overall_coverage_percentage, 0.0);
         assert_eq!(data.line_coverage_percentage, 0.0);
         assert_eq!(data.branch_coverage_percentage, 0.0);
@@ -191,7 +193,6 @@ mod tests {
 
     #[test]
     fn test_coverage_data_serialization() {
-        let session_id = Uuid::new_v4();
         let mut data = CoverageData::new();
         data.overall_coverage_percentage = 75.5;
         data.line_coverage_percentage = 80.0;
@@ -222,7 +223,6 @@ mod tests {
 
     #[test]
     fn test_coverage_data_add_file() {
-        let session_id = Uuid::new_v4();
         let mut data = CoverageData::new();
 
         data.add_file("src/main.rs".to_string(), 100, 80);
@@ -235,7 +235,6 @@ mod tests {
 
     #[test]
     fn test_coverage_data_add_uncovered_line() {
-        let session_id = Uuid::new_v4();
         let mut data = CoverageData::new();
 
         data.add_uncovered_line("src/main.rs".to_string(), 42);
@@ -249,7 +248,6 @@ mod tests {
 
     #[test]
     fn test_coverage_data_add_uncovered_branch() {
-        let session_id = Uuid::new_v4();
         let mut data = CoverageData::new();
 
         data.add_uncovered_branch("src/main.rs".to_string(), "if condition".to_string());
@@ -268,7 +266,6 @@ mod tests {
 
     #[test]
     fn test_coverage_data_add_uncovered_function() {
-        let session_id = Uuid::new_v4();
         let mut data = CoverageData::new();
 
         data.add_uncovered_function("src/main.rs".to_string(), "test_function".to_string());
@@ -287,7 +284,6 @@ mod tests {
 
     #[test]
     fn test_coverage_data_calculate_overall_coverage() {
-        let session_id = Uuid::new_v4();
         let mut data = CoverageData::new();
 
         data.add_file("src/main.rs".to_string(), 100, 80); // 80% coverage
@@ -301,7 +297,6 @@ mod tests {
 
     #[test]
     fn test_coverage_data_get_summary() {
-        let session_id = Uuid::new_v4();
         let mut data = CoverageData::new();
 
         data.overall_coverage_percentage = 85.5;
@@ -320,7 +315,6 @@ mod tests {
 
     #[test]
     fn test_coverage_data_get_summary_with_files() {
-        let session_id = Uuid::new_v4();
         let mut data = CoverageData::new();
 
         data.add_file("src/main.rs".to_string(), 100, 80);
@@ -461,7 +455,6 @@ mod tests {
 
     #[test]
     fn test_coverage_data_debug() {
-        let session_id = Uuid::new_v4();
         let data = CoverageData::new();
         let debug_str = format!("{:?}", data);
 
@@ -471,7 +464,7 @@ mod tests {
 
     #[test]
     fn test_coverage_data_clone() {
-        let session_id = Uuid::new_v4();
+        let _session_id = Uuid::new_v4();
         let mut data1 = CoverageData::new();
         data1.overall_coverage_percentage = 75.5;
         data1.add_file("src/main.rs".to_string(), 100, 80);

@@ -11,6 +11,7 @@ use std::sync::Arc;
 use tokio::process::Command;
 
 /// Deployment validator
+#[allow(dead_code)]
 pub struct DeploymentValidator {
     cleanroom: Arc<CleanroomEnvironment>,
 }
@@ -320,6 +321,9 @@ impl DeploymentValidator {
 mod tests {
     use super::*;
     use crate::cleanroom::CleanroomEnvironment;
+    
+    // Allow unwrap/expect in tests as they are expected to panic on failure
+    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic)]
     use crate::config::CleanroomConfig;
 
     #[tokio::test]

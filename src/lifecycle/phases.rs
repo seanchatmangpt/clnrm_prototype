@@ -3,6 +3,8 @@
 //! Manages execution of lifecycle phases: init, test, deploy, validate.
 //! Integrates with cleanroom for hermetic test execution.
 
+#![allow(dead_code, clippy::get_first)]
+
 use super::config::{LifecycleConfig, Phase, Status};
 use super::readiness::ReadinessTracker;
 use super::validator::DeploymentValidator;
@@ -365,7 +367,7 @@ impl LifecycleManager {
         let _cmd = format!("{} {}", phase.command, phase.args.join(" "));
 
         // Execute test in cleanroom - for now, just run a simple test
-        let _result = cleanroom
+        cleanroom
             .execute_test("phase_test", || {
                 // Placeholder: In production, this would execute the actual command
                 Ok::<(), CleanroomError>(())
@@ -392,7 +394,7 @@ impl LifecycleManager {
             return Err(CleanroomError::validation_error("Empty command"));
         }
 
-        let mut cmd = Command::new(parts[0]);
+        let mut cmd = Command::new(parts.get(0).ok_or_else(|| CleanroomError::validation_error("Empty command"))?);
         if let Some(args) = parts.get(1..) {
             cmd.args(args);
         }
@@ -508,6 +510,9 @@ struct ValidationCheck {
 mod tests {
     use super::*;
     use crate::lifecycle::config::LifecycleConfig;
+    
+    // Allow unwrap/expect in tests as they are expected to panic on failure
+    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic, clippy::let_unit_value)]
 
     #[tokio::test]
     async fn test_lifecycle_manager_creation() {

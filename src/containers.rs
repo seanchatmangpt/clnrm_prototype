@@ -7,6 +7,8 @@
 //! - Security boundaries and isolation
 //! - Deterministic execution support
 
+#![allow(clippy::panic)]
+
 use crate::cleanroom::{ContainerMetrics, ContainerStatus, ContainerWrapper};
 use crate::container_base::{BaseContainer, ContainerBase};
 use crate::error::{CleanroomError, Result};

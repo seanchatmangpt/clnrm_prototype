@@ -3,6 +3,8 @@
 //! Provides a containerized PostgreSQL instance using testcontainers-rs
 //! with health checks, connection info, and automatic teardown.
 
+#![allow(dead_code)]
+
 use crate::error::{CleanroomError, Result};
 use crate::services::{ConnectionInfo, Service};
 use testcontainers::{runners::SyncRunner, Container};
@@ -10,8 +12,10 @@ use testcontainers_modules::postgres::Postgres as PostgresImage;
 
 /// PostgreSQL service fixture using testcontainers
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Postgres {
     /// Testcontainers container
+    #[allow(dead_code)]
     container: Container<PostgresImage>,
     /// Connection information
     connection_info: ConnectionInfo,
@@ -167,7 +171,6 @@ impl Postgres {
                     e
                 ))
             })
-            .map_err(|e| e)
     }
 }
 
@@ -212,7 +215,7 @@ impl Service for Postgres {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::expect_used, clippy::unnecessary_unwrap, clippy::get_first)]
+#[allow(clippy::unwrap_used, clippy::expect_used, clippy::unnecessary_unwrap, clippy::get_first, clippy::panic)]
 mod tests {
     use super::*;
 
@@ -247,18 +250,18 @@ mod tests {
         if let Ok(postgres) = postgres {
 
             // Create test table
-            postgres.create_test_table().expect("Failed to create test table");
+            postgres.create_test_table().unwrap_or_else(|e| panic!("Failed to create test table: {}", e));
 
             // Insert test data
-            let id = postgres.insert_test_data("test_name").expect("Failed to insert test data");
+            let id = postgres.insert_test_data("test_name").unwrap_or_else(|e| panic!("Failed to insert test data: {}", e));
             assert!(id > 0);
 
             // Get database size
-            let size = postgres.get_database_size().expect("Failed to get database size");
+            let size = postgres.get_database_size().unwrap_or_else(|e| panic!("Failed to get database size: {}", e));
             assert!(!size.is_empty());
 
             // Get active connections
-            let connections = postgres.get_active_connections().expect("Failed to get active connections");
+            let connections = postgres.get_active_connections().unwrap_or_else(|e| panic!("Failed to get active connections: {}", e));
             assert!(connections >= 0);
         } else {
             println!("Skipping test - Docker not available");

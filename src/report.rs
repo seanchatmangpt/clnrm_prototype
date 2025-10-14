@@ -6,6 +6,8 @@
 //! - Coverage analysis
 //! - Recommendations
 
+#![allow(dead_code, clippy::new_without_default)]
+
 use crate::error::{CleanroomError, Result};
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Serialize};
@@ -57,6 +59,7 @@ impl<'de> serde::Deserialize<'de> for SerializableInstant {
 
 /// Test report generator for cleanroom testing
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct TestReport {
     /// Session ID
     session_id: Uuid,
@@ -179,7 +182,7 @@ impl CoverageData {
     pub fn add_uncovered_line(&mut self, filename: String, line_number: u32) {
         self.uncovered_lines
             .entry(filename)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(line_number);
     }
 
@@ -187,7 +190,7 @@ impl CoverageData {
     pub fn add_uncovered_branch(&mut self, filename: String, branch_name: String) {
         self.uncovered_branches
             .entry(filename)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(branch_name);
     }
 
@@ -195,7 +198,7 @@ impl CoverageData {
     pub fn add_uncovered_function(&mut self, filename: String, function_name: String) {
         self.uncovered_functions
             .entry(filename)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(function_name);
     }
 
@@ -696,6 +699,9 @@ impl ComprehensiveReport {
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    // Allow unwrap/expect in tests as they are expected to panic on failure
+    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic, clippy::unwrap_or_default, clippy::new_without_default)]
 
     #[tokio::test]
     async fn test_test_report_creation() {

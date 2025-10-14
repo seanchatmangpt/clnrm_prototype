@@ -363,6 +363,9 @@ impl StdError for ConfigError {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    // Allow unwrap/expect in tests as they are expected to panic on failure
+    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing, clippy::panic)]
 
     #[test]
     fn test_error_creation() {

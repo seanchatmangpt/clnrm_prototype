@@ -3,6 +3,8 @@
 //! This module provides a base container struct that eliminates repetitive
 //! field definitions across different container types.
 
+#![allow(async_fn_in_trait)]
+
 use crate::cleanroom::{ContainerMetrics, ContainerStatus};
 use crate::error::Result;
 use crate::policy::Policy;
@@ -128,6 +130,7 @@ impl Default for ContainerBase {
 ///
 /// This trait provides common functionality for containers that embed
 /// the ContainerBase struct.
+#[allow(async_fn_in_trait)]
 pub trait BaseContainer {
     /// Get reference to the base container
     fn base(&self) -> &ContainerBase;

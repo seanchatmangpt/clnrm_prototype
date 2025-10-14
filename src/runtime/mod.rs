@@ -3,7 +3,9 @@
 //! Provides runtime execution capabilities including command execution,
 //! timeout handling, resource management, and structured concurrency.
 
-use crate::error::Result;
+#![allow(clippy::get_first)]
+
+use crate::error::{Result, CleanroomError};
 use crate::policy::Policy;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -304,7 +306,7 @@ impl Runtime {
     fn run_command(&self) -> Result<RunOutput> {
         use std::process::Command;
 
-        let mut cmd = Command::new(&self.config.args[0]);
+        let mut cmd = Command::new(self.config.args.first().ok_or_else(|| CleanroomError::validation_error("Empty command"))?);
 
         // Add arguments
         if let Some(args) = self.config.args.get(1..) {

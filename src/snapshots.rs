@@ -6,6 +6,8 @@
 //! - Snapshot validation
 //! - Snapshot reporting
 
+#![allow(dead_code)]
+
 use crate::error::{CleanroomError, Result};
 use crate::serializable_instant::SerializableInstant;
 use serde::{Deserialize, Serialize};
@@ -17,6 +19,7 @@ use uuid::Uuid;
 
 /// Snapshot manager for cleanroom testing
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct SnapshotManager {
     /// Session ID
     session_id: Uuid,
@@ -542,8 +545,8 @@ pub struct SnapshotSummary {
 mod tests {
     use super::*;
     
-    // Allow unwrap/expect in tests as they are expected to panic on failure
-    #[allow(clippy::unwrap_used, clippy::expect_used, clippy::get_first)]
+    // Allow panics and unwrap in tests as they are expected to fail fast
+    #[allow(clippy::panic, clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
 
     #[tokio::test]
     async fn test_snapshot_manager_creation() {
@@ -821,7 +824,7 @@ mod tests {
 
         let retrieved = data.get_snapshot("test");
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.expect("Operation failed").name, "test");
+        assert_eq!(retrieved.unwrap_or_else(|| panic!("Snapshot not found")).name, "test");
 
         let not_found = data.get_snapshot("nonexistent");
         assert!(not_found.is_none());
@@ -863,7 +866,7 @@ mod tests {
         data.add_snapshot(snapshot);
         data.update_validation_status("test", SnapshotValidationStatus::Valid);
 
-        let updated = data.get_snapshot("test").expect("Operation failed");
+        let updated = data.get_snapshot("test").unwrap_or_else(|| panic!("Snapshot not found"));
         assert_eq!(updated.validation_status, SnapshotValidationStatus::Valid);
         assert_eq!(data.statistics.valid_snapshots, 1);
     }
@@ -885,7 +888,7 @@ mod tests {
             SnapshotValidationStatus::Invalid("test error".to_string()),
         );
 
-        let updated = data.get_snapshot("test").expect("Operation failed");
+        let updated = data.get_snapshot("test").unwrap_or_else(|| panic!("Snapshot not found"));
         assert_eq!(
             updated.validation_status,
             SnapshotValidationStatus::Invalid("test error".to_string())

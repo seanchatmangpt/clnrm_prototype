@@ -308,8 +308,8 @@ mod tests {
         let start_time = Instant::now();
         let metrics = ContainerMetricsBuilder::postgres(&start_time);
 
-        assertions::assert_metrics_reasonable(&metrics).expect("Metrics should be reasonable");
-        assertions::assert_minimum_uptime(&metrics, 0).expect("Minimum uptime assertion should pass");
-        assertions::assert_memory_range(&metrics, 100, 200).expect("Memory range assertion should pass");
+        assertions::assert_metrics_reasonable(&metrics).unwrap_or_else(|e| panic!("Metrics should be reasonable: {}", e));
+        assertions::assert_minimum_uptime(&metrics, 0).unwrap_or_else(|e| panic!("Minimum uptime assertion should pass: {}", e));
+        assertions::assert_memory_range(&metrics, 100, 200).unwrap_or_else(|e| panic!("Memory range assertion should pass: {}", e));
     }
 }
