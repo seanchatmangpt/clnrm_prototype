@@ -11,7 +11,7 @@
 //! - Security policy enforcement
 //! - Performance monitoring and metrics collection
 
-use crate::cleanroom::{
+use clnrm::{
     run, CleanroomConfig, CleanroomEnvironment, CleanroomGuard, ContainerWrapper, GenericContainer,
     PostgresContainer, RedisContainer,
 };
@@ -135,7 +135,7 @@ async fn benchmark_singleton_containers() -> Result<(Duration, Duration), Box<dy
     config.enable_singleton_containers = true;
     config.container_startup_timeout = Duration::from_secs(60); // Allow time for container startup
 
-    let environment = CleanroomEnvironment::new(config).await?;
+    let environment: CleanroomEnvironment = CleanroomEnvironment::new(config).await?;
     let environment_arc = Arc::new(environment);
     let _guard = CleanroomGuard::new(environment_arc.clone());
 

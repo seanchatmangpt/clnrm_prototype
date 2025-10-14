@@ -39,7 +39,7 @@ use serde_json::json;
 use std::path::PathBuf;
 use uuid::Uuid;
 
-use crate::cleanroom::{
+use clnrm::{
     run, run_with_policy, Assert, CleanroomConfig, CleanroomEnvironment, Policy, RunResult,
 };
 
