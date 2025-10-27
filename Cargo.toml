@@ -69,7 +69,7 @@ harness = false
 
 [dev-dependencies]
 criterion = "0.7"
-proptest = "1.8"
+proptest = "1.9"
 insta = "1.43"
 cucumber = { version = "0.21", features = ["macros"] }
 assert_cmd = "2.0"
