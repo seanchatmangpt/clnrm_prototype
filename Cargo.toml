@@ -68,7 +68,7 @@ name = "production_benchmarks"
 harness = false
 
 [dev-dependencies]
-criterion = "0.7"
+criterion = "0.8"
 proptest = "1.9"
 insta = "1.44"
 cucumber = { version = "0.21", features = ["macros"] }
