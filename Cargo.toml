@@ -24,7 +24,7 @@ regex = "1.12"
 tempfile = "3.23"
 chrono = { version = "0.4", features = ["serde"] }
 toml = "0.9"
-sha2 = "0.10"
+sha2 = "0.11"
 
 # Container dependencies (required)
 testcontainers = { version = "0.25", features = ["blocking"] }
