@@ -1,0 +1,21 @@
+{
+  "subject": {
+    "repo": "seanchatmangpt/clnrm_prototype",
+    "pr": 17,
+    "pr_head_before": "db3c6fc370b8623e390532bcd3e0afdd18f6e247",
+    "base": "584628721b91d52c2cc99a92c820bb68dfcd1351"
+  },
+  "harness": "criterion 0.7, cargo bench --locked --bench dev_deps_contract (release profile)",
+  "host": "darwin arm64, cargo 1.97.0",
+  "date": "2026-09-26",
+  "results": {
+    "cargo_lock_toml_parse": { "low": "1.2797 ms", "estimate": "1.3735 ms", "high": "1.4920 ms" },
+    "port_alloc_release_1000": { "low": "64.881 us", "estimate": "73.320 us", "high": "82.369 us" }
+  },
+  "regression_bounds": {
+    "guard_latency_regression_bound": "median lockfile admission < 250 ms (debug test profile)",
+    "port_alloc_release_latency_regression_bound": "median 1000 allocate+release < 50 ms (debug test profile)"
+  },
+  "authority": "NONE",
+  "ceiling": "SELECT"
+}

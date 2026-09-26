@@ -39,8 +39,8 @@ pub struct DeterministicPortAllocator {
     base_port: u16,
     /// Allocated ports
     allocated_ports: Vec<u16>,
-    /// Port allocation counter
-    counter: u16,
+    /// Port allocation counter (u32 so it cannot overflow before the u16 port does)
+    counter: u32,
 }
 
 /// Deterministic file system operation
@@ -263,7 +263,9 @@ impl DeterministicPortAllocator {
             ));
         }
 
-        let port = self.base_port + self.counter;
+        let port = u16::try_from(u32::from(self.base_port) + self.counter).map_err(|_| {
+            CleanroomError::deterministic_error("Port range exhausted (u16 overflow)")
+        })?;
         self.counter += 1;
         self.allocated_ports.push(port);
 
