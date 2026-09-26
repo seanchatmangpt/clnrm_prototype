@@ -1228,8 +1228,11 @@ mod tests {
 
     #[test]
     fn test_serializable_instant_new() {
+        // elapsed() may legitimately read 0ns immediately after now() on coarse
+        // clocks; sleep so the assertion is about monotonic progress, not timing luck.
         let instant = SerializableInstant::now();
-        assert!(instant.elapsed().as_nanos() > 0);
+        std::thread::sleep(std::time::Duration::from_millis(1));
+        assert!(instant.elapsed() >= std::time::Duration::from_millis(1));
     }
 
     #[test]
